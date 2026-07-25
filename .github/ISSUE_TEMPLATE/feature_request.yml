@@ -1,0 +1,40 @@
+name: Feature request
+description: 'Propose a change or addition. Note: this boilerplate is opinionated — excluded categories (auth, Redux/Zustand, i18n, Docker) will not be added.'
+title: 'feat: <short description>'
+labels: ['enhancement', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening: check the `plan/` roadmap and existing issues. If the feature is in the "deliberately excluded" list, the answer is a docs guide, not a code change.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that's hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should change? Be specific — file paths, APIs, behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - template (react-ts)
+        - config packages
+        - CLI
+        - docs
+        - CI / release
+        - other
+    validations:
+      required: true

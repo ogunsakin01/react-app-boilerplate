@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a bug in the boilerplate template, config packages, or CLI.
+title: 'bug: <short description>'
+labels: ['bug', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! A minimal reproduction is the fastest path to a fix.
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Which version, tag, or commit SHA are you on?
+      placeholder: 'e.g. v1.2.0 or commit abc123'
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - template (react-ts)
+        - config packages (eslint / tsconfig / vitest / playwright)
+        - CLI (create-yourthing)
+        - docs / README
+        - CI / release
+        - other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, package manager + version, browser (if relevant).
+      placeholder: 'macOS 14 / Node 22.5 / pnpm 9.15 / Chrome 130'
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Steps to reproduce, or a link to a minimal repro repo.
+      placeholder: |
+        1. Scaffold with `npx create-yourthing my-app`
+        2. Run `pnpm test`
+        3. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / error output
+      render: shell

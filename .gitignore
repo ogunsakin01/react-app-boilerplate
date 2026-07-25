@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+.turbo/
+.cache/
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
+# Storybook
+storybook-static/
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local planning notes (not part of the boilerplate)
+plan/

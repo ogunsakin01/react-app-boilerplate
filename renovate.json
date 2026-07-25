@@ -1,0 +1,64 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":dependencyDashboard",
+    ":prHourlyLimit4",
+    ":prConcurrentLimit10"
+  ],
+  "schedule": ["before 06:00 on monday"],
+  "timezone": "UTC",
+  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 06:00 on monday"]
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch", "minor"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "groupName": "tanstack",
+      "matchPackagePatterns": ["^@tanstack/"]
+    },
+    {
+      "groupName": "storybook",
+      "matchPackagePatterns": ["^@storybook/", "^storybook$", "^msw-storybook-addon$"]
+    },
+    {
+      "groupName": "eslint",
+      "matchPackagePatterns": [
+        "^eslint",
+        "^@eslint/",
+        "^typescript-eslint$",
+        "^@typescript-eslint/"
+      ]
+    },
+    {
+      "groupName": "testing",
+      "matchPackagePatterns": ["^vitest", "^@vitest/", "^@testing-library/", "^jsdom$", "^msw$"]
+    },
+    {
+      "groupName": "playwright",
+      "matchPackagePatterns": ["^@playwright/", "^playwright$"]
+    },
+    {
+      "groupName": "prettier",
+      "matchPackagePatterns": ["^prettier", "^eslint-config-prettier$"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major-update"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "automerge": true
+  }
+}
