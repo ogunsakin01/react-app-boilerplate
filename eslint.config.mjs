@@ -13,6 +13,11 @@ export default tseslint.config(
       '**/playwright-report/**',
       '**/test-results/**',
       '**/.turbo/**',
+      // Each workspace owns its own ESLint config; root only lints root-level files.
+      'templates/**',
+      'packages/**',
+      'cli/**',
+      'apps/**',
     ],
   },
   js.configs.recommended,
