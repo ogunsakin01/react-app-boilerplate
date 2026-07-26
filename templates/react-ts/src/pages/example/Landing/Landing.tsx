@@ -38,7 +38,9 @@ export function Landing() {
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <p className="text-xs font-medium uppercase tracking-wide text-primary">Boilerplate tour</p>
-        <h2 className="text-2xl font-semibold">Welcome to your React + TypeScript starter</h2>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Welcome to your React + TypeScript starter
+        </h1>
         <p className="text-sm text-muted">
           Pick a path: read the docs to learn what each piece does, or jump into the working example
           to see them wired up.
@@ -49,7 +51,7 @@ export function Landing() {
         <CtaCard
           icon={BookIcon}
           title="Documentation"
-          description="Every feature the boilerplate ships. routing, data fetching, forms, mocks, theming, testing. explained with code from the running app."
+          description="Every feature this boilerplate ships (routing, data fetching, forms, mocks, theming, testing) explained with code from the running app."
           to="/docs"
           ctaLabel="Browse docs"
         />

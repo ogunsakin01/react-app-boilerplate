@@ -5,14 +5,15 @@ import { expect, test } from '@playwright/test';
 
 const YT_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
 
-test('home page renders the app title + demo form', async ({ page }) => {
+test('home page renders the docs + example cta cards', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.getByRole('button', { name: /load video/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /browse docs/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /try the example/i })).toBeVisible();
 });
 
-test('pasting a URL loads the video on /watch', async ({ page }) => {
-  await page.goto('/');
+test('example page loads a video onto /watch when a URL is submitted', async ({ page }) => {
+  await page.goto('/example');
   await page.getByRole('textbox').fill(YT_URL);
   await page.getByRole('button', { name: /load video/i }).click();
 
@@ -25,7 +26,7 @@ test('pasting a URL loads the video on /watch', async ({ page }) => {
 });
 
 test('invalid URL is rejected with a validation error', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/example');
   await page.getByRole('textbox').fill('https://vimeo.com/12345');
   await page.getByRole('button', { name: /load video/i }).click();
   await expect(page.getByRole('alert')).toContainText(/YouTube URL/i);

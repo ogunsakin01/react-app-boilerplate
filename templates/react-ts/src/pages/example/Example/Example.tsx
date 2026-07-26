@@ -10,9 +10,9 @@ export function Example() {
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <p className="text-xs font-medium uppercase tracking-wide text-primary">Example usage</p>
-        <h2 className="text-2xl font-semibold">Paste a YouTube URL</h2>
+        <h1 className="text-3xl font-semibold tracking-tight">Paste a YouTube URL</h1>
         <p className="text-sm text-muted">
-          Any URL shape works. <code>watch?v=</code>, <code>youtu.be/…</code>, <code>/embed</code>,{' '}
+          Any URL shape works: <code>watch?v=</code>, <code>youtu.be/…</code>, <code>/embed</code>,{' '}
           <code>/shorts</code>, or a bare video ID. Submitting navigates to{' '}
           <code>/watch?v=&lt;id&gt;</code> and loads the video with metadata fetched via TanStack
           Query.
