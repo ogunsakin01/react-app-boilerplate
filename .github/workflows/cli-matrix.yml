@@ -1,0 +1,109 @@
+name: CLI matrix
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scaffold:
+    name: scaffold (${{ matrix.pm }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pm: [npm, pnpm, yarn]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages + CLI
+        run: pnpm build
+
+      - name: Pack shared config packages
+        id: pack
+        run: |
+          TARBALL_DIR="$RUNNER_TEMP/tarballs"
+          mkdir -p "$TARBALL_DIR"
+          for pkg in tsconfig eslint-config vitest-config playwright-config; do
+            (cd "packages/$pkg" && pnpm pack --pack-destination "$TARBALL_DIR")
+          done
+          echo "dir=$TARBALL_DIR" >> "$GITHUB_OUTPUT"
+          ls "$TARBALL_DIR"
+
+      - name: Scaffold via CLI + rewrite deps to tarballs
+        id: scaffold
+        env:
+          TARBALL_DIR: ${{ steps.pack.outputs.dir }}
+        run: |
+          SCAFFOLD_ROOT="$RUNNER_TEMP/scaffold"
+          mkdir -p "$SCAFFOLD_ROOT"
+          cd "$SCAFFOLD_ROOT"
+          node "$GITHUB_WORKSPACE/cli/create-atomic-react/dist/index.js" \
+            my-app --yes --pm ${{ matrix.pm }} --no-install --no-git
+          cd my-app
+          node -e '
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            for (const section of ["dependencies", "devDependencies"]) {
+              const deps = pkg[section] || {};
+              for (const name of Object.keys(deps)) {
+                if (name.startsWith("@react-app-boilerplate/")) {
+                  const short = name.replace("@react-app-boilerplate/", "react-app-boilerplate-");
+                  deps[name] = `file:${process.env.TARBALL_DIR}/${short}-0.1.0.tgz`;
+                }
+              }
+            }
+            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+          '
+          echo "dir=$SCAFFOLD_ROOT/my-app" >> "$GITHUB_OUTPUT"
+
+      # Ubuntu runners ship yarn 1.22 preinstalled. COREPACK_ENABLE_STRICT=0
+      # lets corepack fall through to it when the target has no packageManager
+      # field (the scaffolded project doesn't).
+      - name: Install with ${{ matrix.pm }}
+        working-directory: ${{ steps.scaffold.outputs.dir }}
+        env:
+          COREPACK_ENABLE_STRICT: '0'
+        run: ${{ matrix.pm }} install
+
+      - name: Lint
+        working-directory: ${{ steps.scaffold.outputs.dir }}
+        env:
+          COREPACK_ENABLE_STRICT: '0'
+        run: ${{ matrix.pm }} run lint
+
+      - name: Typecheck
+        working-directory: ${{ steps.scaffold.outputs.dir }}
+        env:
+          COREPACK_ENABLE_STRICT: '0'
+        run: ${{ matrix.pm }} run typecheck
+
+      - name: Test
+        working-directory: ${{ steps.scaffold.outputs.dir }}
+        env:
+          COREPACK_ENABLE_STRICT: '0'
+        run: ${{ matrix.pm }} run test
+
+      - name: Build
+        working-directory: ${{ steps.scaffold.outputs.dir }}
+        env:
+          COREPACK_ENABLE_STRICT: '0'
+        run: ${{ matrix.pm }} run build

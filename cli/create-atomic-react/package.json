@@ -1,0 +1,51 @@
+{
+  "name": "create-atomic-react",
+  "version": "0.1.0",
+  "description": "Scaffold a new project from the react-app-boilerplate template.",
+  "license": "MIT",
+  "author": "Damilola Ogunsakin",
+  "homepage": "https://github.com/ogunsakin01/react-app-boilerplate/tree/main/cli/create-atomic-react#readme",
+  "bugs": "https://github.com/ogunsakin01/react-app-boilerplate/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogunsakin01/react-app-boilerplate.git",
+    "directory": "cli/create-atomic-react"
+  },
+  "type": "module",
+  "bin": {
+    "create-atomic-react": "./dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
+  "scripts": {
+    "prebuild": "node scripts/sync-template.mjs",
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "keywords": [
+    "create",
+    "react",
+    "typescript",
+    "boilerplate",
+    "scaffold"
+  ],
+  "dependencies": {
+    "@clack/prompts": "^0.9.0",
+    "picocolors": "^1.1.1",
+    "yargs-parser": "^21.1.1"
+  },
+  "devDependencies": {
+    "@react-app-boilerplate/tsconfig": "workspace:*",
+    "@types/node": "^22.10.2",
+    "@types/yargs-parser": "^21.0.3",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}
