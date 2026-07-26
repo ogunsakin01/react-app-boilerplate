@@ -1,12 +1,12 @@
 # Contributing
 
-Thanks for your interest — this boilerplate is deliberately opinionated, and contributions that fit the direction are very welcome.
+Thanks for your interest. this boilerplate is deliberately opinionated, and contributions that fit the direction are very welcome.
 
 ## Ground rules
 
 - Every commit must follow [Conventional Commits](https://www.conventionalcommits.org/). `commitlint` enforces this on `commit-msg`.
 - CI must stay green on `main` at all times. Don't batch broken intermediate states.
-- Prefer the smallest dependency that does the job — every dep is a permanent maintenance cost.
+- Prefer the smallest dependency that does the job. every dep is a permanent maintenance cost.
 - Follow the component convention in `templates/react-ts` exactly: every component folder ships `.tsx`, `.stories.tsx`, `.test.tsx`, and `index.ts`. No exceptions.
 - Don't add features that were explicitly excluded (auth, Redux/Zustand, i18n, Docker). Open an issue to discuss first.
 
@@ -51,4 +51,4 @@ chore(deps): bump vitest to 3.0.0
 
 ## Reporting issues
 
-Use the issue templates — they'll ask for the environment, repro, and expected vs. actual behavior. Bug reports without a repro will be closed.
+Use the issue templates. they'll ask for the environment, repro, and expected vs. actual behavior. Bug reports without a repro will be closed.
