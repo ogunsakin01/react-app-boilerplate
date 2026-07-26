@@ -1,0 +1,35 @@
+# Rules for actions/labeler@v5 — applied to every PR.
+# Add/adjust paths as the repo evolves.
+
+'area: template':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'templates/**'
+
+'area: packages':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'packages/**'
+
+'area: cli':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'cli/**'
+
+'area: ci':
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+
+'area: docs':
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/package.json'
+          - 'pnpm-lock.yaml'
+          - '.changeset/**'

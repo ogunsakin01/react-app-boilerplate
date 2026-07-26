@@ -1,0 +1,53 @@
+# Repo label definitions — synced by .github/workflows/labels.yml on every push to main.
+# Adding a label: append here. Renaming: use the old name in `from`. Removing: delete the entry.
+
+- name: bug
+  color: 'd73a4a'
+  description: Something isn't working as documented
+- name: enhancement
+  color: 'a2eeef'
+  description: New feature or improvement to an existing one
+- name: docs
+  color: '0075ca'
+  description: README, guides, or code comments
+- name: dependencies
+  color: '0366d6'
+  description: Renovate PR or manual dep bump
+- name: major-update
+  color: 'b60205'
+  description: Major version bump — needs human review before merge
+- name: security
+  color: 'ee0701'
+  description: Vulnerability report or fix
+- name: triage
+  color: 'fbca04'
+  description: Needs initial triage from a maintainer
+- name: good first issue
+  color: '7057ff'
+  description: Well-scoped and beginner-friendly
+- name: help wanted
+  color: '008672'
+  description: Extra attention is needed
+- name: needs repro
+  color: 'e99695'
+  description: Bug report without a minimal reproduction
+- name: wontfix
+  color: 'cfd3d7'
+  description: Out of scope or explicitly excluded
+
+# Area labels — auto-applied by .github/labeler.yml based on changed paths.
+- name: 'area: template'
+  color: '5319e7'
+  description: Changes in templates/
+- name: 'area: packages'
+  color: '5319e7'
+  description: Changes in packages/ (shareable configs)
+- name: 'area: cli'
+  color: '5319e7'
+  description: Changes in cli/create-atomic-react/
+- name: 'area: ci'
+  color: '5319e7'
+  description: Changes in .github/workflows/
+- name: 'area: docs'
+  color: '5319e7'
+  description: Changes in README, docs/, or *.md files
