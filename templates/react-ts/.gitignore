@@ -1,0 +1,8 @@
+node_modules
+dist
+.vite
+*.tsbuildinfo
+storybook-static
+playwright-report
+test-results
+/e2e/.auth

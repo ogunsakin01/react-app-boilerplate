@@ -1,0 +1,46 @@
+// EXAMPLE - safe to delete alongside `src/routes/example.tsx`.
+import { useNavigate } from '@tanstack/react-router';
+import { ArchitectureNote } from '@/components/molecules/example/ArchitectureNote';
+import { VideoUrlForm } from '@/components/molecules/example/VideoUrlForm';
+
+export function Example() {
+  const navigate = useNavigate();
+
+  return (
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-primary">Example usage</p>
+        <h2 className="text-2xl font-semibold">Paste a YouTube URL</h2>
+        <p className="text-sm text-muted">
+          Any URL shape works. <code>watch?v=</code>, <code>youtu.be/…</code>, <code>/embed</code>,{' '}
+          <code>/shorts</code>, or a bare video ID. Submitting navigates to{' '}
+          <code>/watch?v=&lt;id&gt;</code> and loads the video with metadata fetched via TanStack
+          Query.
+        </p>
+      </div>
+
+      <VideoUrlForm onSubmit={(videoId) => navigate({ to: '/watch', search: { v: videoId } })} />
+
+      <ArchitectureNote
+        layers={[
+          { layer: 'Template', components: ['MainLayout'] },
+          {
+            layer: 'Molecules',
+            components: ['VideoUrlForm', 'ArchitectureNote'],
+            purpose: 'VideoUrlForm wraps rhf + zod validation around an atom',
+          },
+          {
+            layer: 'Atoms',
+            components: ['UrlInput', 'Button'],
+            purpose: 'Reusable primitives. UrlInput is a styled <input type="url">',
+          },
+          {
+            layer: 'Lib',
+            components: ['lib/example/youtube.ts'],
+            purpose: 'Pure URL parser used by zod refine; covered by 19 unit tests',
+          },
+        ]}
+      />
+    </section>
+  );
+}
