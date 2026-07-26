@@ -1,0 +1,30 @@
+{
+  "name": "@react-app-boilerplate/tsconfig",
+  "version": "0.1.0",
+  "description": "Shared TypeScript configurations: strict base, Vite/React app, and Node build tooling.",
+  "license": "MIT",
+  "author": "Damilola Ogunsakin",
+  "homepage": "https://github.com/ogunsakin01/react-app-boilerplate/tree/main/packages/tsconfig#readme",
+  "bugs": "https://github.com/ogunsakin01/react-app-boilerplate/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogunsakin01/react-app-boilerplate.git",
+    "directory": "packages/tsconfig"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "files": [
+    "base.json",
+    "vite-react.json",
+    "node.json",
+    "README.md"
+  ],
+  "keywords": [
+    "typescript",
+    "tsconfig",
+    "react",
+    "vite"
+  ]
+}

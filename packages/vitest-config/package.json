@@ -1,0 +1,45 @@
+{
+  "name": "@react-app-boilerplate/vitest-config",
+  "version": "0.1.0",
+  "description": "Shared Vitest configuration factory for React apps: jsdom, cleanup, MSW-friendly, v8 coverage with sensible excludes.",
+  "license": "MIT",
+  "author": "Damilola Ogunsakin",
+  "homepage": "https://github.com/ogunsakin01/react-app-boilerplate/tree/main/packages/vitest-config#readme",
+  "bugs": "https://github.com/ogunsakin01/react-app-boilerplate/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogunsakin01/react-app-boilerplate.git",
+    "directory": "packages/vitest-config"
+  },
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "keywords": [
+    "vitest",
+    "vitest-config",
+    "react",
+    "testing"
+  ],
+  "peerDependencies": {
+    "@vitest/coverage-v8": "^3.0.0",
+    "vitest": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@vitest/coverage-v8": {
+      "optional": true
+    }
+  }
+}

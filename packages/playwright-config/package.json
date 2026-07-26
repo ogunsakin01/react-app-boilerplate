@@ -1,0 +1,39 @@
+{
+  "name": "@react-app-boilerplate/playwright-config",
+  "version": "0.1.0",
+  "description": "Shared Playwright configuration factory: CI-aware retries/workers, HTML report, webServer auto-starting Vite.",
+  "license": "MIT",
+  "author": "Damilola Ogunsakin",
+  "homepage": "https://github.com/ogunsakin01/react-app-boilerplate/tree/main/packages/playwright-config#readme",
+  "bugs": "https://github.com/ogunsakin01/react-app-boilerplate/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogunsakin01/react-app-boilerplate.git",
+    "directory": "packages/playwright-config"
+  },
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "keywords": [
+    "playwright",
+    "playwright-config",
+    "e2e",
+    "testing"
+  ],
+  "peerDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}
