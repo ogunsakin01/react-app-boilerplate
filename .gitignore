@@ -43,3 +43,6 @@ yarn-error.log*
 
 # Local planning notes (not part of the boilerplate)
 plan/
+
+# Claude Code local state
+.claude/
