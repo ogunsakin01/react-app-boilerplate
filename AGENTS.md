@@ -65,6 +65,8 @@ The generator writes all files with an axe assertion in the test template so acc
 - SEO: every page renders `<Seo title="…" siteName="…" description="…" />` at the top of its JSX. The `Seo` atom (`src/components/atoms/Seo/`) emits title + description + canonical + Open Graph + Twitter card tags via React 19's native `<head>` hoisting — do NOT install `react-helmet-async`.
 - Sitemap: `scripts/generate-sitemap.mjs` runs as part of `pnpm build` and writes `dist/sitemap.xml` derived from `src/routes/`. Dynamic routes (`$slug.tsx`) are skipped — extend the script if you need dynamic entries. Robots at `public/robots.txt` (edit for production domain if serving on a subdomain).
 - PWA: `vite-plugin-pwa` is configured in `vite.config.ts` (via `loadEnv`, so manifest name pulls from `VITE_APP_TITLE`). `<PwaUpdate>` is rendered inside `MainLayout` and uses `virtual:pwa-register/react` — mock that module in tests. `registerType: 'prompt'` shows a reload toast; switch to `autoUpdate` for silent updates. Dev server has the SW disabled (`devOptions.enabled: false`).
+- Sentry: init helper at `src/lib/sentry.ts` runs from `src/main.tsx` before React mounts. No-op unless `VITE_SENTRY_DSN` is set, and always inert in dev (`enabled: !import.meta.env.DEV`). To capture route-level errors, import `Sentry` from `@/lib/sentry` and call `Sentry.captureException(error)` inside the router's `errorComponent`.
+- Deploy: `pnpm deploy` shells out to `aws s3 sync` — needs the AWS CLI on PATH. Two cache tiers: hashed assets get `max-age=31536000,immutable`, entry-point files get `max-age=0,must-revalidate`. For S3-compatible providers, pass `--endpoint <url>` or set `DEPLOY_ENDPOINT`. CDN base URL for hashed assets: `VITE_BASE_URL` at build time.
 
 ## Commit + PR style
 

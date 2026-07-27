@@ -49,6 +49,8 @@ A single-project React app that is production-ready on day one:
 - **Accessibility** enforced at three tiers: `jest-axe` in unit tests, `@storybook/addon-a11y` in Storybook, `@axe-core/playwright` scanning every e2e route. Generated component tests include an axe assertion by default.
 - **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time — always in sync, zero manual steps.
 - **PWA** support via `vite-plugin-pwa`: manifest, precached shell, offline fallback, service worker, and a wired-up `<PwaUpdate>` toast that prompts the user to reload when a new version is available.
+- **Sentry** error tracking + performance monitoring, opt-in via `VITE_SENTRY_DSN` (empty DSN = no-op, no bundle cost in dev).
+- **Deploy to S3-compatible buckets** (AWS S3, Cloudflare R2, DigitalOcean Spaces, MinIO) via `pnpm deploy` — shells out to the AWS CLI, sets two cache-control policies (immutable for hashed assets, `must-revalidate` for entry points), optionally invalidates CloudFront. `VITE_BASE_URL` sets the CDN asset prefix at build time.
 - **`pnpm generate`** interactive scaffolder for atoms / molecules / organisms / templates / pages. Produces the full four-file set (or six for pages) with a11y assertions baked in.
 - **Renovate** grouped dep updates with automerge on green CI ([docs.renovatebot.com](https://docs.renovatebot.com/)).
 - **Changesets** for version bumps and npm publishing with provenance ([github.com/changesets/changesets](https://github.com/changesets/changesets)).
@@ -200,6 +202,8 @@ Located at `.claude/skills/` in the scaffolded project:
 - **`add-env-var`** — Add a typed environment variable — extends the zod schema, `.env.example`, and inferred types in one go.
 - **`add-seo`** — Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page via the `<Seo>` atom.
 - **`configure-pwa`** — Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
+- **`configure-sentry`** — Enable Sentry (DSN), tune sample rates, wire route errors, add replay, upload source maps.
+- **`configure-deploy`** — Ship `dist/` to S3 / R2 / Spaces / MinIO, invalidate CloudFront, set CDN base URL.
 
 Claude Code auto-discovers these when a scaffolded project is opened. Other agents can be pointed at `AGENTS.md` or `.claude/skills/` manually.
 

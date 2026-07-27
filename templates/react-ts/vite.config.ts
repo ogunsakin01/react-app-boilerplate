@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
   const shortName = env.VITE_APP_SHORT_NAME || appTitle;
 
   return {
+    base: env.VITE_BASE_URL || '/',
     plugins: [
       TanStackRouterVite({ target: 'react', autoCodeSplitting: true }),
       react(),
