@@ -48,6 +48,7 @@ A single-project React app that is production-ready on day one:
 - **husky** pre-commit + commit-msg hooks, **lint-staged**, **commitlint** enforcing Conventional Commits ([typicode.github.io/husky](https://typicode.github.io/husky/), [commitlint.js.org](https://commitlint.js.org/), [conventionalcommits.org](https://www.conventionalcommits.org/)).
 - **Accessibility** enforced at three tiers: `jest-axe` in unit tests, `@storybook/addon-a11y` in Storybook, `@axe-core/playwright` scanning every e2e route. Generated component tests include an axe assertion by default.
 - **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time — always in sync, zero manual steps.
+- **PWA** support via `vite-plugin-pwa`: manifest, precached shell, offline fallback, service worker, and a wired-up `<PwaUpdate>` toast that prompts the user to reload when a new version is available.
 - **`pnpm generate`** interactive scaffolder for atoms / molecules / organisms / templates / pages. Produces the full four-file set (or six for pages) with a11y assertions baked in.
 - **Renovate** grouped dep updates with automerge on green CI ([docs.renovatebot.com](https://docs.renovatebot.com/)).
 - **Changesets** for version bumps and npm publishing with provenance ([github.com/changesets/changesets](https://github.com/changesets/changesets)).
@@ -198,6 +199,7 @@ Located at `.claude/skills/` in the scaffolded project:
 - **`add-msw-handler`** — Add a mocked HTTP endpoint to `src/mocks/handlers.ts` so it's picked up by Vitest, Storybook, dev, and Playwright.
 - **`add-env-var`** — Add a typed environment variable — extends the zod schema, `.env.example`, and inferred types in one go.
 - **`add-seo`** — Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page via the `<Seo>` atom.
+- **`configure-pwa`** — Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
 
 Claude Code auto-discovers these when a scaffolded project is opened. Other agents can be pointed at `AGENTS.md` or `.claude/skills/` manually.
 

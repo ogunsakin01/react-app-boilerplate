@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/atoms/Button';
+import { PwaUpdate } from '@/components/molecules/PwaUpdate';
 import { env } from '@/lib/env';
 import { useTheme } from '@/providers/theme-context';
 
@@ -54,6 +55,8 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-10">
         {children}
       </main>
+
+      <PwaUpdate />
     </div>
   );
 }
