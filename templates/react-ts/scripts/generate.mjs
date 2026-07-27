@@ -70,8 +70,6 @@ p.outro(
       .join('\n  '),
 );
 
-// ---- helpers ----
-
 async function resolveKind(preset) {
   if (preset && KINDS.includes(preset)) return preset;
   if (preset) {

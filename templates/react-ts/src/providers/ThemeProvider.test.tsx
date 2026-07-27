@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -75,8 +75,6 @@ describe('ThemeProvider', () => {
         </main>
       </ThemeProvider>,
     );
-    // touch `act` so the import stays referenced even if inference changes
-    act(() => undefined);
     expect(await axe(container)).toHaveNoViolations();
   });
 });
