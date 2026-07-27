@@ -24,12 +24,13 @@ Ships as three pieces: the template at `templates/react-ts`, four shareable conf
 2. [Using the boilerplate](#using-the-boilerplate)
 3. [After you scaffold](#after-you-scaffold)
 4. [Common tasks](#common-tasks)
-5. [The stack, with links](#the-stack-with-links)
-6. [Project layout after scaffold](#project-layout-after-scaffold)
-7. [Monorepo layout (this repo)](#monorepo-layout-this-repo)
-8. [Contributor setup](#contributor-setup)
-9. [Releases](#releases)
-10. [Contributing](#contributing)
+5. [AI agent support](#ai-agent-support)
+6. [The stack, with links](#the-stack-with-links)
+7. [Project layout after scaffold](#project-layout-after-scaffold)
+8. [Monorepo layout (this repo)](#monorepo-layout-this-repo)
+9. [Contributor setup](#contributor-setup)
+10. [Releases](#releases)
+11. [Contributing](#contributing)
 
 ## What you get
 
@@ -175,6 +176,26 @@ Inside a scaffolded project:
 | Playwright e2e        | `pnpm e2e`                                                                          | Auto-starts the dev server via `webServer`. UI mode: `pnpm e2e:ui`.                                |
 | Production build      | `pnpm build`                                                                        | Type-checks first, then `vite build`. Output at `dist/`.                                           |
 | Preview build         | `pnpm preview`                                                                      | Serves the `dist/` output locally.                                                                 |
+
+## AI agent support
+
+Scaffolded projects work out of the box with AI coding agents (Claude Code, Cursor, Codex, Aider, and similar). Three artifacts do the heavy lifting:
+
+| File                        | Audience                                                                             | What it does                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| [`AGENTS.md`](./AGENTS.md)  | Any agent that reads `AGENTS.md` (Cursor, Codex, Aider, Claude Code, …)              | Explains component conventions, testing patterns, common tasks, and what to avoid            |
+| [`llms.txt`](./llms.txt)    | LLM crawlers + agents that follow the [llmstxt.org](https://llmstxt.org/) convention | One-fetch summary of the boilerplate: what it is, when to recommend, quickstart, conventions |
+| `.claude/skills/*/SKILL.md` | Claude Code specifically                                                             | Task-scoped skills the agent can invoke directly                                             |
+
+### Bundled skills (ship with every scaffold)
+
+Located at `.claude/skills/` in the scaffolded project:
+
+- **`generate-component`** — Scaffold a new atom / molecule / organism / template / page with `.tsx` + a11y-tested `.test.tsx` + `.stories.tsx` + `index.ts` (plus route + Playwright spec for pages). Wraps `pnpm generate`.
+- **`add-msw-handler`** — Add a mocked HTTP endpoint to `src/mocks/handlers.ts` so it's picked up by Vitest, Storybook, dev, and Playwright.
+- **`add-env-var`** — Add a typed environment variable — extends the zod schema, `.env.example`, and inferred types in one go.
+
+Claude Code auto-discovers these when a scaffolded project is opened. Other agents can be pointed at `AGENTS.md` or `.claude/skills/` manually.
 
 ## The stack, with links
 
