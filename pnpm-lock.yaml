@@ -138,6 +138,9 @@ importers:
       '@axe-core/playwright':
         specifier: ^4.10.0
         version: 4.12.1(playwright-core@1.62.0)
+      '@clack/prompts':
+        specifier: ^1.7.0
+        version: 1.7.0
       '@commitlint/cli':
         specifier: ^19.6.1
         version: 19.8.1(@types/node@26.1.1)(typescript@5.9.3)
@@ -222,6 +225,9 @@ importers:
       msw:
         specifier: ^2.6.6
         version: 2.15.0(@types/node@26.1.1)(typescript@5.9.3)
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
       prettier:
         specifier: ^3.4.2
         version: 3.9.6
@@ -413,8 +419,16 @@ packages:
   '@clack/core@0.4.1':
     resolution: {integrity: sha512-Pxhij4UXg8KSr7rPek6Zowm+5M22rbd2g1nfojHJkxp5YkFqiZ2+YLEM/XGVIzvGOcM0nqjIFxrpDwWRZYWYjA==}
 
+  '@clack/core@1.4.3':
+    resolution: {integrity: sha512-/kr3UWNtdJfxZtPgDqUOmG2pvwlmcLGheex5yiZKdwbzZJxhV+HMNR9QNmyY5cGwTNV6LrR7Jtp+KjhUAP1qBQ==}
+    engines: {node: '>= 20.12.0'}
+
   '@clack/prompts@0.9.1':
     resolution: {integrity: sha512-JIpyaboYZeWYlyP0H+OoPPxd6nqueG/CmN6ixBiNFsIDHREevjIf0n0Ohh5gr5C8pEDknzgvz+pIJ8dMhzWIeg==}
+
+  '@clack/prompts@1.7.0':
+    resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
+    engines: {node: '>= 20.12.0'}
 
   '@commitlint/cli@19.8.1':
     resolution: {integrity: sha512-LXUdNIkspyxrlV6VDHWBmCZRtkEVRpBKxi2Gtw3J54cGWhLCTouVD/Q6ZSaSvd2YaDObWK8mDjrz3TIKtaQMAA==}
@@ -4122,10 +4136,22 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
+  '@clack/core@1.4.3':
+    dependencies:
+      fast-wrap-ansi: 0.2.2
+      sisteransi: 1.0.5
+
   '@clack/prompts@0.9.1':
     dependencies:
       '@clack/core': 0.4.1
       picocolors: 1.1.1
+      sisteransi: 1.0.5
+
+  '@clack/prompts@1.7.0':
+    dependencies:
+      '@clack/core': 1.4.3
+      fast-string-width: 3.0.2
+      fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
   '@commitlint/cli@19.8.1(@types/node@26.1.1)(typescript@5.9.3)':
