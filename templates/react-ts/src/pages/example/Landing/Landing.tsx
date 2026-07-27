@@ -1,4 +1,5 @@
 // EXAMPLE landing page - safe to delete once you build your own.
+import { Seo } from '@/components/atoms/Seo';
 import { ArchitectureNote } from '@/components/molecules/example/ArchitectureNote';
 import { CtaCard } from '@/components/molecules/example/CtaCard';
 
@@ -36,6 +37,11 @@ const PlayIcon = (
 export function Landing() {
   return (
     <section className="flex flex-col gap-6">
+      <Seo
+        title="Welcome"
+        siteName="react-app-boilerplate"
+        description="Opinionated React + TypeScript + Vite boilerplate with accessibility testing, atomic-design components, TanStack Router, and MSW mocks."
+      />
       <div className="flex flex-col gap-2">
         <p className="text-xs font-medium uppercase tracking-wide text-primary">Boilerplate tour</p>
         <h1 className="text-3xl font-semibold tracking-tight">

@@ -62,6 +62,7 @@ The generator writes all files with an axe assertion in the test template so acc
 - Context modules like `theme-context.ts`: exercised through the provider that consumes them, no standalone test.
 - Env parsing: `src/lib/env.ts` — extend the zod schema, copy the new var into `.env.example`.
 - The docs page at `/docs` uses `?raw` imports so its code snippets are always in sync with the actual source. Follow the same pattern if you extend it.
+- SEO: every page renders `<Seo title="…" siteName="…" description="…" />` at the top of its JSX. The `Seo` atom (`src/components/atoms/Seo/`) emits title + description + canonical + Open Graph + Twitter card tags via React 19's native `<head>` hoisting — do NOT install `react-helmet-async`.
 
 ## Commit + PR style
 
