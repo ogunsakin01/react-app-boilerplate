@@ -47,7 +47,7 @@ A single-project React app that is production-ready on day one:
 - **ESLint 9 flat config** and **Prettier** ([eslint.org](https://eslint.org/), [prettier.io](https://prettier.io/)).
 - **husky** pre-commit + commit-msg hooks, **lint-staged**, **commitlint** enforcing Conventional Commits ([typicode.github.io/husky](https://typicode.github.io/husky/), [commitlint.js.org](https://commitlint.js.org/), [conventionalcommits.org](https://www.conventionalcommits.org/)).
 - **Accessibility** enforced at three tiers: `jest-axe` in unit tests, `@storybook/addon-a11y` in Storybook, `@axe-core/playwright` scanning every e2e route. Generated component tests include an axe assertion by default.
-- **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags. Uses React 19's native `<head>` hoisting — no `react-helmet`.
+- **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time — always in sync, zero manual steps.
 - **`pnpm generate`** interactive scaffolder for atoms / molecules / organisms / templates / pages. Produces the full four-file set (or six for pages) with a11y assertions baked in.
 - **Renovate** grouped dep updates with automerge on green CI ([docs.renovatebot.com](https://docs.renovatebot.com/)).
 - **Changesets** for version bumps and npm publishing with provenance ([github.com/changesets/changesets](https://github.com/changesets/changesets)).

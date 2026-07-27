@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "concurrently -k -n app,storybook -c cyan,magenta \"vite\" \"storybook dev -p 6006 --no-open\"",
     "dev:app": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/generate-sitemap.mjs",
+    "generate:sitemap": "node scripts/generate-sitemap.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
