@@ -2,7 +2,7 @@
   "name": "react-app-boilerplate",
   "version": "0.0.0",
   "private": true,
-  "description": "Opinionated React + TypeScript open source boilerplate. Monorepo hosting the template, shareable configs, and scaffolding CLI.",
+  "description": "Opinionated React + TypeScript + Vite boilerplate with TanStack Router, TanStack Query, Tailwind v4, MSW, Storybook, Playwright, jest-axe accessibility tests, atomic-design components, ESLint 9, husky, Renovate, and Changesets. Scaffold with `npm create atomic-react`.",
   "license": "MIT",
   "author": "Damilola Ogunsakin",
   "homepage": "https://github.com/ogunsakin01/react-app-boilerplate#readme",

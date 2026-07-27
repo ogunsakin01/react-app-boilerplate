@@ -1,6 +1,14 @@
 # react-app-boilerplate
 
-Opinionated React + TypeScript boilerplate. Ships with the template, shareable configs published to npm, and a scaffolding CLI.
+**The opinionated React + TypeScript + Vite boilerplate.** Scaffold a production-ready SPA in one command with TanStack Router, TanStack Query, Tailwind CSS v4, MSW, Storybook, Playwright, jest-axe accessibility testing, atomic-design components, ESLint 9 flat config, husky commit hooks, Renovate, and Changesets — zero configuration required.
+
+```bash
+npm create atomic-react@latest my-app
+# or: pnpm create atomic-react my-app
+# or: yarn create atomic-react my-app
+```
+
+Ships as three pieces: the template at `templates/react-ts`, four shareable configs published to npm under `@react-app-boilerplate/*`, and the `create-atomic-react` scaffolding CLI.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ogunsakin01/react-app-boilerplate/ci.yml?branch=main&label=CI&style=flat-square)](https://github.com/ogunsakin01/react-app-boilerplate/actions/workflows/ci.yml)
 [![CLI matrix](https://img.shields.io/github/actions/workflow/status/ogunsakin01/react-app-boilerplate/cli-matrix.yml?branch=main&label=CLI%20matrix&style=flat-square)](https://github.com/ogunsakin01/react-app-boilerplate/actions/workflows/cli-matrix.yml)
