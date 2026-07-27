@@ -1,12 +1,33 @@
 import type { Preview } from '@storybook/react-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect, type ReactNode } from 'react';
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router';
+import { createContext, useContext, useEffect, type ComponentType, type ReactNode } from 'react';
 import { ThemeProvider } from '../src/providers/ThemeProvider';
 import { useTheme } from '../src/providers/theme-context';
 import '../src/styles/globals.css';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
+});
+
+const StoryContext = createContext<ComponentType | null>(null);
+
+const storybookRootRoute = createRootRoute({
+  component: function StorybookRoot() {
+    const Story = useContext(StoryContext);
+    return Story ? <Story /> : null;
+  },
+});
+
+const storybookRouter = createRouter({
+  routeTree: storybookRootRoute,
+  history: createMemoryHistory({ initialEntries: ['/'] }),
+  defaultPreload: false,
 });
 
 function ThemeSync({ theme, children }: { theme: 'light' | 'dark'; children: ReactNode }) {
@@ -59,7 +80,9 @@ const preview: Preview = {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <ThemeSync theme={context.globals.theme as 'light' | 'dark'}>
-            <Story />
+            <StoryContext.Provider value={Story as ComponentType}>
+              <RouterProvider router={storybookRouter} />
+            </StoryContext.Provider>
           </ThemeSync>
         </ThemeProvider>
       </QueryClientProvider>
