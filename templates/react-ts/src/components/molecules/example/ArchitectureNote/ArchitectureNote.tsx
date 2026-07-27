@@ -19,7 +19,7 @@ export function ArchitectureNote({
       aria-label={title}
       className="mt-8 flex flex-col gap-3 rounded-md border border-border bg-transparent p-4"
     >
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{title}</h3>
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">{title}</h2>
       <ul className="flex flex-col gap-2 text-sm">
         {layers.map((row) => (
           <li key={row.layer} className="flex flex-col gap-0.5">

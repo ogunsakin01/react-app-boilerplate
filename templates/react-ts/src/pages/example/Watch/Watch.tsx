@@ -14,6 +14,7 @@ export function Watch({ videoId }: WatchProps) {
 
   return (
     <section className="flex flex-col gap-6">
+      <h1 className="sr-only">Watch a YouTube video</h1>
       <VideoUrlForm onSubmit={(id) => navigate({ to: '/watch', search: { v: id } })} />
       {videoId ? (
         <Suspense fallback={<p className="text-sm text-muted">Loading player…</p>}>
