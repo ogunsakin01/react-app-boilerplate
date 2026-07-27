@@ -7,7 +7,8 @@ Thanks for your interest. this boilerplate is deliberately opinionated, and cont
 - Every commit must follow [Conventional Commits](https://www.conventionalcommits.org/). `commitlint` enforces this on `commit-msg`.
 - CI must stay green on `main` at all times. Don't batch broken intermediate states.
 - Prefer the smallest dependency that does the job. every dep is a permanent maintenance cost.
-- Follow the component convention in `templates/react-ts` exactly: every component folder ships `.tsx`, `.stories.tsx`, `.test.tsx`, and `index.ts`. No exceptions.
+- Follow the component convention in `templates/react-ts` exactly: every component folder ships `.tsx`, `.stories.tsx`, `.test.tsx`, and `index.ts`. Pages additionally ship a Playwright spec (`e2e/<Name>.spec.ts`) and a route file (`src/routes/<slug>.tsx`). Every test — including generated ones — asserts `expect(await axe(container)).toHaveNoViolations()` so a11y regressions fail the same run. No exceptions.
+- Don't hand-roll the boilerplate. Run `pnpm generate` (or `yarn generate`) inside the template to scaffold the full set. Non-interactive: `pnpm generate --kind atom --name Badge`.
 - Don't add features that were explicitly excluded (auth, Redux/Zustand, i18n, Docker). Open an issue to discuss first.
 
 ## Local setup

@@ -1,6 +1,13 @@
 // EXAMPLE - safe to delete.
 import { Link } from '@tanstack/react-router';
+import a11yPreviewSource from '../../../../.storybook/preview.tsx?raw';
+import a11yE2eSource from '../../../../e2e/a11y.spec.ts?raw';
+import generateScriptSource from '../../../../scripts/generate.mjs?raw';
+import { CodeBlock } from '@/components/atoms/CodeBlock';
 import { ArchitectureNote } from '@/components/molecules/example/ArchitectureNote';
+import videoFormSource from '@/components/molecules/example/VideoUrlForm/VideoUrlForm.tsx?raw';
+import videoFormTestSource from '@/components/molecules/example/VideoUrlForm/VideoUrlForm.test.tsx?raw';
+import setupSource from '@/test/setup.ts?raw';
 
 type LearnMoreLink = { label: string; href: string };
 
@@ -401,6 +408,11 @@ pnpm build && ls dist/
   },
 ];
 
+const EXTRA_NAV: { id: string; title: string }[] = [
+  { id: 'accessibility', title: 'Accessibility' },
+  { id: 'conventions', title: 'Conventions' },
+];
+
 export function Docs() {
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
@@ -409,7 +421,7 @@ export function Docs() {
           On this page
         </p>
         <nav aria-label="Docs sections" className="flex flex-col gap-0.5 text-sm">
-          {SECTIONS.map((s) => (
+          {[...SECTIONS, ...EXTRA_NAV].map((s) => (
             <a
               key={s.id}
               href={`#${s.id}`}
@@ -472,6 +484,171 @@ export function Docs() {
           </section>
         ))}
 
+        <section id="accessibility" className="flex scroll-mt-20 flex-col gap-4">
+          <h2 className="text-xl font-semibold tracking-tight">Accessibility</h2>
+          <p className="max-w-2xl text-muted">
+            Accessibility is wired at three tiers so violations are caught wherever they show up.
+            Unit tests use{' '}
+            <a
+              href="https://github.com/nickcolley/jest-axe"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary hover:underline"
+            >
+              jest-axe
+            </a>{' '}
+            against the rendered DOM. Storybook renders the{' '}
+            <a
+              href="https://storybook.js.org/addons/@storybook/addon-a11y"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary hover:underline"
+            >
+              addon-a11y
+            </a>{' '}
+            panel on every story. End-to-end tests use{' '}
+            <a
+              href="https://github.com/dequelabs/axe-core-npm/tree/develop/packages/playwright"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary hover:underline"
+            >
+              @axe-core/playwright
+            </a>{' '}
+            to scan real navigations. All three run the same axe-core rule set.
+          </p>
+
+          <h3 className="text-base font-semibold">1. Register the matcher once</h3>
+          <p className="max-w-2xl text-muted">
+            The vitest setup file extends <code>expect</code> with <code>toHaveNoViolations</code>,
+            so every test can assert against axe results without re-importing the matcher. The typed
+            augmentation lives in <code>src/test/a11y.d.ts</code>.
+          </p>
+          <CodeBlock code={setupSource} filePath="src/test/setup.ts" language="ts" />
+
+          <h3 className="text-base font-semibold">2. Write the component accessibly</h3>
+          <p className="max-w-2xl text-muted">
+            The example form pairs the input with a visible label, ties its error message to the
+            input via <code>aria-describedby</code>, flips <code>aria-invalid</code> on validation
+            failure, and exposes the error text as an <code>role=&quot;alert&quot;</code> live
+            region so screen readers announce it. The form itself gets an <code>aria-label</code> so
+            it&apos;s reachable as a landmark.
+          </p>
+          <CodeBlock
+            code={videoFormSource}
+            filePath="src/components/molecules/example/VideoUrlForm/VideoUrlForm.tsx"
+            language="tsx"
+          />
+
+          <h3 className="text-base font-semibold">3. Assert no violations in unit tests</h3>
+          <p className="max-w-2xl text-muted">
+            Render the component, capture the container, and hand it to <code>axe</code>. Repeat the
+            check after triggering a validation error so the accessible name / live-region behaviour
+            is covered too.
+          </p>
+          <CodeBlock
+            code={videoFormTestSource}
+            filePath="src/components/molecules/example/VideoUrlForm/VideoUrlForm.test.tsx"
+            language="tsx"
+          />
+
+          <h3 className="text-base font-semibold">4. Scan real pages in e2e</h3>
+          <p className="max-w-2xl text-muted">
+            The Playwright spec loops through the top-level routes, injects axe, and asserts zero
+            violations. A separate case exercises the error state — because a real screen-reader
+            user hits validation errors just as often as the happy path.
+          </p>
+          <CodeBlock code={a11yE2eSource} filePath="e2e/a11y.spec.ts" language="ts" />
+
+          <h3 className="text-base font-semibold">5. Surface violations in Storybook</h3>
+          <p className="max-w-2xl text-muted">
+            Storybook&apos;s a11y addon runs axe on the story you&apos;re viewing and shows the
+            report in a side panel. It ships in <code>todo</code> mode by default so runs don&apos;t
+            fail CI while you triage — flip to <code>error</code> once your baseline is clean.
+          </p>
+          <CodeBlock code={a11yPreviewSource} filePath=".storybook/preview.tsx" language="tsx" />
+
+          <div className="flex flex-col gap-2 text-xs text-muted">
+            <p className="font-semibold uppercase tracking-wide">Learn more</p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+              <li>
+                <a
+                  href="https://www.w3.org/WAI/WCAG21/quickref/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  WCAG 2.1 quick reference ↗
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.w3.org/WAI/ARIA/apg/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  ARIA Authoring Practices ↗
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  axe-core rule list ↗
+                </a>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="conventions" className="flex scroll-mt-20 flex-col gap-4">
+          <h2 className="text-xl font-semibold tracking-tight">Conventions</h2>
+          <p className="max-w-2xl text-muted">
+            Every component ships four files: <code>.tsx</code>, <code>.test.tsx</code>,{' '}
+            <code>.stories.tsx</code>, and <code>index.ts</code>. Pages add a Playwright spec and a
+            TanStack Router file route. The generated tests include an axe assertion so the a11y
+            floor never drops. Follow the same shape for anything you add by hand, or let the
+            generator do it for you.
+          </p>
+
+          <h3 className="text-base font-semibold">Generate a component or page</h3>
+          <p className="max-w-2xl text-muted">
+            Run <code>pnpm generate</code> (or <code>yarn generate</code>) and answer the two
+            prompts. Non-interactive form: <code>pnpm generate --kind atom --name Badge</code>.
+          </p>
+          <CodeBlock
+            code={`# interactive
+pnpm generate
+
+# non-interactive: atom / molecule / organism / template / page
+pnpm generate --kind molecule --name UserAvatar
+pnpm generate --kind page --name Dashboard`}
+            filePath="terminal"
+          />
+
+          <h3 className="text-base font-semibold">What the generator writes</h3>
+          <p className="max-w-2xl text-muted">
+            The generator is a single script with no framework-specific magic. Each kind maps to a
+            folder, and the templates are inline string builders — fork them freely.
+          </p>
+          <CodeBlock code={generateScriptSource} filePath="scripts/generate.mjs" language="js" />
+
+          <div className="flex flex-col gap-2 text-xs text-muted">
+            <p className="font-semibold uppercase tracking-wide">Rule of thumb</p>
+            <ul className="flex flex-col gap-0.5">
+              <li>Atoms / molecules / organisms / templates → tsx + test + story + index.</li>
+              <li>Pages → also ship a Playwright spec and a route file.</li>
+              <li>
+                Every test includes an axe check so accessibility regressions fail the same run.
+              </li>
+            </ul>
+          </div>
+        </section>
+
         <ArchitectureNote
           layers={[
             { layer: 'Template', components: ['MainLayout'] },
@@ -479,6 +656,11 @@ export function Docs() {
               layer: 'Molecules',
               components: ['ArchitectureNote'],
               purpose: 'Same footer as every other example page',
+            },
+            {
+              layer: 'Atoms',
+              components: ['CodeBlock'],
+              purpose: 'Renders each source snippet with a file-path caption',
             },
             {
               layer: 'Route',
