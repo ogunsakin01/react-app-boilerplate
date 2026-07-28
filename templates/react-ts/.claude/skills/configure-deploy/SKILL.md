@@ -92,10 +92,16 @@ Prints every `aws` command without executing anything. Use to verify the config 
 | `--cloudfront-id`  | `DEPLOY_CLOUDFRONT_ID` | invalidate after upload         |
 | `--dry-run`        | —                      | preview commands, don't execute |
 
-## Alternatives to this script
+## Managed hosts (zero-config)
 
-- **Vercel / Netlify**: import the repo — their build detects Vite automatically. No deploy script needed.
-- **GitHub Pages**: use `actions/deploy-pages` after `pnpm build`.
-- **Fly.io / Render**: use a static-site preset pointing at `dist/`.
+The template ships preconfigured for the three most common managed hosts. Import the repo and the build works with no extra flags.
 
-Delete `scripts/deploy.mjs` and the `deploy` script in `package.json` if you go with a managed host.
+**Vercel** — `vercel.json` at the root handles SPA fallback and cache-control. Just link the repo in the Vercel dashboard.
+
+**Netlify** — `netlify.toml` at the root sets build command, publish dir, SPA fallback, and cache headers. Link the repo in the Netlify dashboard.
+
+**Cloudflare Pages** — `public/_redirects` and `public/_headers` handle SPA fallback and cache-control (Vite copies `public/` into `dist/`). In Cloudflare Pages, set the build command to `pnpm build` and the output dir to `dist`.
+
+**GitHub Pages** — use `actions/deploy-pages` after `pnpm build`. Set `VITE_BASE_URL=/repo-name/` if serving from a subpath.
+
+If you go with a managed host, you can delete `scripts/deploy.mjs`, the `deploy` script in `package.json`, the `deploy.test.ts`, and any host configs you don't use.

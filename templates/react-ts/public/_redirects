@@ -1,0 +1,3 @@
+# Cloudflare Pages / Netlify SPA fallback.
+# Unknown paths get served the shell so client-side routing can take over.
+/*  /index.html  200
