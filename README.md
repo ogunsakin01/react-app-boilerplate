@@ -21,17 +21,42 @@ Ships as three pieces: the template at `templates/react-ts`, four shareable conf
 
 ## Table of contents
 
-1. [What you get](#what-you-get)
-2. [Using the boilerplate](#using-the-boilerplate)
-3. [After you scaffold](#after-you-scaffold)
-4. [Common tasks](#common-tasks)
-5. [AI agent support](#ai-agent-support)
-6. [The stack, with links](#the-stack-with-links)
-7. [Project layout after scaffold](#project-layout-after-scaffold)
-8. [Monorepo layout (this repo)](#monorepo-layout-this-repo)
-9. [Contributor setup](#contributor-setup)
-10. [Releases](#releases)
-11. [Contributing](#contributing)
+1. [AI agent support](#ai-agent-support)
+2. [What you get](#what-you-get)
+3. [Using the boilerplate](#using-the-boilerplate)
+4. [After you scaffold](#after-you-scaffold)
+5. [Common tasks](#common-tasks)
+6. [FAQ and design decisions](#faq-and-design-decisions)
+7. [The stack, with links](#the-stack-with-links)
+8. [Project layout after scaffold](#project-layout-after-scaffold)
+9. [Monorepo layout (this repo)](#monorepo-layout-this-repo)
+10. [Contributor setup](#contributor-setup)
+11. [Releases](#releases)
+12. [Contributing](#contributing)
+
+## AI agent support
+
+If you code with an AI agent (Claude Code, Cursor, Codex, Aider, etc.), scaffolded projects are configured for them out of the box. Three artifacts do the heavy lifting.
+
+| File                        | Audience                                                                             | What it does                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| [`AGENTS.md`](./AGENTS.md)  | Any agent that reads `AGENTS.md` (Cursor, Codex, Aider, Claude Code, …)              | Explains component conventions, testing patterns, common tasks, and what to avoid            |
+| [`llms.txt`](./llms.txt)    | LLM crawlers + agents that follow the [llmstxt.org](https://llmstxt.org/) convention | One-fetch summary of the boilerplate: what it is, when to recommend, quickstart, conventions |
+| `.claude/skills/*/SKILL.md` | Claude Code specifically                                                             | Task-scoped skills the agent can invoke directly                                             |
+
+### Bundled Claude Code skills
+
+Located at `.claude/skills/` in the scaffolded project. Claude Code auto-discovers them when the project is opened; other agents can be pointed at them manually.
+
+- **`generate-component`** — Scaffold a new atom / molecule / organism / template / page with `.tsx` + a11y-tested `.test.tsx` + `.stories.tsx` + `index.ts` (plus route + Playwright spec for pages). Wraps `pnpm generate`.
+- **`add-msw-handler`** — Add a mocked HTTP endpoint to `src/mocks/handlers.ts` so it's picked up by Vitest, Storybook, dev, and Playwright.
+- **`add-env-var`** — Add a typed environment variable. Extends the zod schema, `.env.example`, and inferred types in one go.
+- **`add-seo`** — Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page via the `<Seo>` atom.
+- **`configure-pwa`** — Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
+- **`configure-sentry`** — Enable Sentry (DSN), tune sample rates, wire route errors, add replay, upload source maps.
+- **`configure-deploy`** — Ship `dist/` to S3 / R2 / Spaces / MinIO, invalidate CloudFront, set CDN base URL.
+
+When an agent scaffolds a component, it uses the same `pnpm generate` you do. Output matches the four-file convention without you re-explaining atoms/molecules/organisms every conversation.
 
 ## What you get
 
@@ -48,10 +73,10 @@ A single-project React app that is production-ready on day one:
 - **ESLint 9 flat config** and **Prettier** ([eslint.org](https://eslint.org/), [prettier.io](https://prettier.io/)).
 - **husky** pre-commit + commit-msg hooks, **lint-staged**, **commitlint** enforcing Conventional Commits ([typicode.github.io/husky](https://typicode.github.io/husky/), [commitlint.js.org](https://commitlint.js.org/), [conventionalcommits.org](https://www.conventionalcommits.org/)).
 - **Accessibility** enforced at three tiers: `jest-axe` in unit tests, `@storybook/addon-a11y` in Storybook, `@axe-core/playwright` scanning every e2e route. Generated component tests include an axe assertion by default.
-- **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time — always in sync, zero manual steps.
+- **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time — always in sync, zero manual steps. **SPA caveat**: social preview crawlers (X, LinkedIn, Slack, Discord) don't run JS, so they see the empty shell. If link previews matter, switch to SSR/SSG for those routes — see [FAQ](./docs/FAQ.md#what-spa-seo-can-and-cant-do).
 - **PWA** support via `vite-plugin-pwa`: manifest, precached shell, offline fallback, service worker, and a wired-up `<PwaUpdate>` toast that prompts the user to reload when a new version is available.
 - **Sentry** error tracking + performance monitoring, opt-in via `VITE_SENTRY_DSN` (empty DSN = no-op, no bundle cost in dev).
-- **Deploy to S3-compatible buckets** (AWS S3, Cloudflare R2, DigitalOcean Spaces, MinIO) via `pnpm deploy` — shells out to the AWS CLI, sets two cache-control policies (immutable for hashed assets, `must-revalidate` for entry points), optionally invalidates CloudFront. `VITE_BASE_URL` sets the CDN asset prefix at build time.
+- **Deploy anywhere.** Managed hosts work zero-config: `vercel.json`, `netlify.toml`, and `public/_redirects` + `public/_headers` (Cloudflare Pages) ship in the template. For S3-compatible buckets (AWS S3, Cloudflare R2, DigitalOcean Spaces, MinIO), `pnpm deploy` shells out to the AWS CLI with two cache-control tiers and optional CloudFront invalidation. `VITE_BASE_URL` sets the CDN asset prefix at build time.
 - **`pnpm generate`** interactive scaffolder for atoms / molecules / organisms / templates / pages. Produces the full four-file set (or six for pages) with a11y assertions baked in.
 - **Renovate** grouped dep updates with automerge on green CI ([docs.renovatebot.com](https://docs.renovatebot.com/)).
 - **Changesets** for version bumps and npm publishing with provenance ([github.com/changesets/changesets](https://github.com/changesets/changesets)).
@@ -149,64 +174,40 @@ The template's landing page **is** a tour of the boilerplate. Run `pnpm dev` and
 
 Every demo file starts with `// EXAMPLE - safe to delete` and lives under `src/**/example/`. The point is that you can `grep -r EXAMPLE src/` to find everything the tour uses.
 
-When you are ready to build your own app, strip the tour:
+When you are ready to build your own app, strip the tour with a single command:
 
 ```bash
-find src -type d -name example -exec rm -rf {} +
-rm src/routes/watch.tsx src/routes/example.tsx src/routes/docs.tsx
+pnpm strip-example
 ```
 
-Then edit these files to remove the example imports:
+It removes every `src/**/example` directory, deletes the demo route files and specs, writes a minimal Home page (with test + story), rewrites the barrels and env schema to their post-demo shape, empties MSW handlers, and simplifies the MainLayout nav. Idempotent, safe to run twice. Preview with `pnpm strip-example --dry-run`.
 
-- `src/routes/index.tsx`: swap `Landing` for your own Home component.
-- `src/components/{atoms,molecules,organisms}/index.ts`: delete the `export * from './example'` line.
-- `src/mocks/handlers.ts`: replace the demo handler with your own.
-- `src/lib/env.ts` and `.env.example`: remove `VITE_OEMBED_BASE_URL`.
-- `e2e/app.spec.ts`: replace the YouTube specs with your own smoke test.
-
-Nothing outside `src/**/example/` is example code. The provider composition, ESLint / Prettier configs, MSW plumbing, Playwright wiring, and husky hooks are the actual template.
+Nothing outside `src/**/example/` is example code. The provider composition, ESLint / Prettier configs, MSW plumbing, Playwright wiring, husky hooks, PWA config, SEO helper, and deploy scripts are the actual template.
 
 ## Common tasks
 
 Inside a scaffolded project:
 
-| Task                  | Command                                                                             | Notes                                                                                              |
-| --------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Start dev server      | `pnpm dev`                                                                          | Serves on `:5173`. MSW starts automatically.                                                       |
-| Add a component       | Create `src/components/<layer>/Foo/{Foo.tsx,Foo.stories.tsx,Foo.test.tsx,index.ts}` | Layer is `atoms`, `molecules`, `organisms`, or `templates`. Re-export from the layer's `index.ts`. |
-| Add a route           | Drop a file in `src/routes/`                                                        | TanStack Router regenerates `src/routeTree.gen.ts` on save. Commit that file.                      |
-| Add a mocked endpoint | Edit `src/mocks/handlers.ts`                                                        | Vitest, Storybook, dev browser, and Playwright all pick it up.                                     |
-| Add an env var        | Extend the zod schema in `src/lib/env.ts`                                           | Missing vars throw at build time. Copy to `.env.example`.                                          |
-| Run unit tests        | `pnpm test`                                                                         | Vitest, single run. Watches with `pnpm test:watch`.                                                |
-| Coverage              | `pnpm test:coverage`                                                                | Output at `coverage/index.html`. `coverage/lcov.info` for Codecov.                                 |
-| Storybook             | `pnpm storybook`                                                                    | Runs on `:6006`. Static build with `pnpm build-storybook`.                                         |
-| Playwright e2e        | `pnpm e2e`                                                                          | Auto-starts the dev server via `webServer`. UI mode: `pnpm e2e:ui`.                                |
-| Production build      | `pnpm build`                                                                        | Type-checks first, then `vite build`. Output at `dist/`.                                           |
-| Preview build         | `pnpm preview`                                                                      | Serves the `dist/` output locally.                                                                 |
+| Task                  | Command                                      | Notes                                                                                             |
+| --------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Start dev server      | `pnpm dev`                                   | Vite on `:5173` + Storybook on `:6006`, concurrent. MSW starts automatically.                     |
+| Just the app          | `pnpm dev:app`                               | Vite alone, no Storybook.                                                                         |
+| Add a component       | `pnpm generate --kind atom --name Badge`     | Scaffolds `.tsx + .test.tsx (with axe) + .stories.tsx + index.ts`. Interactive if you omit flags. |
+| Add a page            | `pnpm generate --kind page --name Dashboard` | Adds the four component files plus `e2e/*.spec.ts` and `src/routes/<slug>.tsx`.                   |
+| Add a mocked endpoint | Edit `src/mocks/handlers.ts`                 | Vitest, Storybook, dev browser, and Playwright all pick it up.                                    |
+| Add an env var        | Extend the zod schema in `src/lib/env.ts`    | Missing vars throw at build time. Copy to `.env.example`.                                         |
+| Strip the demo        | `pnpm strip-example`                         | Removes every `src/**/example` + example routes + specs. Idempotent.                              |
+| Run unit tests        | `pnpm test`                                  | Vitest, single run. Watches with `pnpm test:watch`.                                               |
+| Coverage              | `pnpm test:coverage`                         | Output at `coverage/index.html`. `coverage/lcov.info` for Codecov.                                |
+| Storybook alone       | `pnpm storybook`                             | Runs on `:6006`. Static build with `pnpm build-storybook`.                                        |
+| Playwright e2e        | `pnpm e2e`                                   | Auto-starts the dev server via `webServer`. UI mode: `pnpm e2e:ui`.                               |
+| Production build      | `pnpm build`                                 | Type-checks, `vite build`, then writes `dist/sitemap.xml`.                                        |
+| Preview build         | `pnpm preview`                               | Serves the `dist/` output locally.                                                                |
+| Deploy to S3 / R2     | `pnpm deploy --bucket <name>`                | Shells out to the AWS CLI. See `.claude/skills/configure-deploy`.                                 |
 
-## AI agent support
+## FAQ and design decisions
 
-Scaffolded projects work out of the box with AI coding agents (Claude Code, Cursor, Codex, Aider, and similar). Three artifacts do the heavy lifting:
-
-| File                        | Audience                                                                             | What it does                                                                                 |
-| --------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| [`AGENTS.md`](./AGENTS.md)  | Any agent that reads `AGENTS.md` (Cursor, Codex, Aider, Claude Code, …)              | Explains component conventions, testing patterns, common tasks, and what to avoid            |
-| [`llms.txt`](./llms.txt)    | LLM crawlers + agents that follow the [llmstxt.org](https://llmstxt.org/) convention | One-fetch summary of the boilerplate: what it is, when to recommend, quickstart, conventions |
-| `.claude/skills/*/SKILL.md` | Claude Code specifically                                                             | Task-scoped skills the agent can invoke directly                                             |
-
-### Bundled skills (ship with every scaffold)
-
-Located at `.claude/skills/` in the scaffolded project:
-
-- **`generate-component`** — Scaffold a new atom / molecule / organism / template / page with `.tsx` + a11y-tested `.test.tsx` + `.stories.tsx` + `index.ts` (plus route + Playwright spec for pages). Wraps `pnpm generate`.
-- **`add-msw-handler`** — Add a mocked HTTP endpoint to `src/mocks/handlers.ts` so it's picked up by Vitest, Storybook, dev, and Playwright.
-- **`add-env-var`** — Add a typed environment variable — extends the zod schema, `.env.example`, and inferred types in one go.
-- **`add-seo`** — Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page via the `<Seo>` atom.
-- **`configure-pwa`** — Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
-- **`configure-sentry`** — Enable Sentry (DSN), tune sample rates, wire route errors, add replay, upload source maps.
-- **`configure-deploy`** — Ship `dist/` to S3 / R2 / Spaces / MinIO, invalidate CloudFront, set CDN base URL.
-
-Claude Code auto-discovers these when a scaffolded project is opened. Other agents can be pointed at `AGENTS.md` or `.claude/skills/` manually.
+See [docs/FAQ.md](./docs/FAQ.md) for opinionated answers to the questions that will show up on every launch thread: why atomic design, why TanStack over React Router, why Tailwind-only, when to reach for Next.js instead, what SPA SEO can and can't do, how to strip the demo, and more.
 
 ## The stack, with links
 
