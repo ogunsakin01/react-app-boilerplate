@@ -10,9 +10,10 @@ const DEFAULT_SETUP_FILES = ['./src/test/setup.ts'];
 const DEFAULT_COVERAGE_EXCLUDE = [
   'src/**/*.test.{ts,tsx}',
   'src/**/*.stories.{ts,tsx}',
+  'src/**/index.ts',
+  'src/**/*.gen.ts',
   'src/main.tsx',
   'src/router.ts',
-  'src/routeTree.gen.ts',
   'src/routes/**',
   'src/vite-env.d.ts',
   'src/mocks/**',

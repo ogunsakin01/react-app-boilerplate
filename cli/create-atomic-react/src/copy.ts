@@ -1,17 +1,26 @@
 import { cp, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { TemplateVariant } from './args.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-export const TEMPLATE_ROOT = resolve(HERE, '../templates/react-ts');
+const TEMPLATES_ROOT = resolve(HERE, '../templates');
 
 const SKIP =
   /(?:node_modules|\.turbo|\.tanstack|coverage|dist|storybook-static|playwright-report|test-results|\.vite|\.tsbuildinfo)/;
 
-export async function copyTemplate(targetDir: string): Promise<void> {
-  await cp(TEMPLATE_ROOT, targetDir, {
+export function templateRoot(variant: TemplateVariant): string {
+  return resolve(TEMPLATES_ROOT, variant);
+}
+
+export async function copyTemplate(
+  targetDir: string,
+  variant: TemplateVariant = 'react-ts',
+): Promise<void> {
+  const src = templateRoot(variant);
+  await cp(src, targetDir, {
     recursive: true,
-    filter: (path) => !SKIP.test(path.slice(TEMPLATE_ROOT.length)),
+    filter: (path) => !SKIP.test(path.slice(src.length)),
   });
 }
 

@@ -30,7 +30,7 @@ afterEach(() => {
   try {
     if (root) act(() => root!.unmount());
   } catch {
-    // React 19's head hoisting cleanup can throw in jsdom — safe to swallow
+    // React 19's head hoisting cleanup can throw in jsdom - safe to swallow
   }
   container?.remove();
   container = null;

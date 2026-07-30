@@ -1,0 +1,27 @@
+[build]
+  command = "pnpm build"
+  publish = "dist/client"
+
+[build.environment]
+  NODE_VERSION = "22.13"
+
+# No SPA fallback needed. Vike prerenders every route to its own .html file,
+# so /docs, /example, /watch, and /404 are all real files on disk.
+
+# Hashed assets are immutable - cache them for a year.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Prerendered HTML must revalidate on every request.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Serve the prerendered 404.html on unknown paths.
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404

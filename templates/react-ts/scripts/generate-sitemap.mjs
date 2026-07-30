@@ -27,7 +27,7 @@ Options:
   -r, --routes <dir>    Routes directory (default: src/routes)
 
 Walks the TanStack Router file-based routes directory and writes a sitemap.xml
-containing every static route. Dynamic routes ($param) are skipped — extend this
+containing every static route. Dynamic routes ($param) are skipped - extend this
 script if you need dynamic entries (e.g. blog posts pulled from a CMS).`);
     process.exit(0);
   }

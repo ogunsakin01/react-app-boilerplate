@@ -1,0 +1,11 @@
+# EXAMPLE - edit for your production deployment.
+# Docs: https://developers.google.com/search/docs/crawling-indexing/robots/intro
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# The sitemap is generated at build time by scripts/generate-sitemap.mjs.
+# Replace the host with your absolute production URL if you serve robots.txt from an
+# alternate domain (e.g. https://example.com/robots.txt).
+Sitemap: /sitemap.xml

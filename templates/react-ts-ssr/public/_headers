@@ -1,0 +1,8 @@
+# Cloudflare Pages cache-control headers.
+# Netlify honors _headers as a fallback if netlify.toml is missing.
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

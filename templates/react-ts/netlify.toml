@@ -11,7 +11,7 @@
   to = "/index.html"
   status = 200
 
-# Hashed assets are immutable — cache them for a year.
+# Hashed assets are immutable - cache them for a year.
 [[headers]]
   for = "/assets/*"
   [headers.values]

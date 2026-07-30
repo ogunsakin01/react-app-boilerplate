@@ -36,19 +36,26 @@ One schema is the validator (`schema.parse`), the resolver (`zodResolver(schema)
 
 Modern Googlebot executes JavaScript, so the `<Seo>` atom's tags and the generated `dist/sitemap.xml` cover Google and Bing indexing. **What SPAs cannot do**: serve populated `<meta>` tags to social preview crawlers (X, LinkedIn, Slack, Discord, iMessage). Those bots don't run JS, so they see the empty `index.html` shell and no `og:image` / `og:title`.
 
-If link previews matter to your product (marketing pages, blog posts, share-to-social flows), switch to SSR/SSG for those routes. Next.js and TanStack Start both make hybrid SPA + SSR straightforward. This boilerplate stays SPA-only for scope.
+**If link previews matter to your product** (marketing pages, blog posts, share-to-social flows), scaffold with the SSR variant instead of the default SPA:
+
+```bash
+npm create atomic-react@latest my-app -- --ssr
+```
+
+The SSR variant swaps TanStack Router for **[Vike](https://vike.dev/) with prerender enabled**. Every route (`/`, `/docs`, `/example`, `/watch`) is compiled to a real static `.html` file at build time, with `<title>` / `<meta>` / `og:*` tags baked into `<head>`. Social crawlers see them because they're right there in the HTML. Deployment stays static - no server, no serverless functions - the same Vercel / Netlify / Cloudflare Pages configs work. Flip `prerender: false` on a specific page's `+config.ts` if you need per-request SSR later.
 
 ## Why not include auth?
 
-Because auth is deployment-specific. Clerk, Auth0, WorkOS, Supabase, Firebase, custom JWT, custom sessions — every choice has different integration shapes. Locking one in would either force it on you or ship boilerplate you'd rip out. Add whichever fits your stack. The provider composition in `src/providers/AppProviders.tsx` is the natural spot.
+Because auth is deployment-specific. Clerk, Auth0, WorkOS, Supabase, Firebase, custom JWT, custom sessions - every choice has different integration shapes. Locking one in would either force it on you or ship boilerplate you'd rip out. Add whichever fits your stack. The provider composition in `src/providers/AppProviders.tsx` is the natural spot.
 
-## Why not i18n, Docker, SSR?
+## Why not i18n, Docker?
 
-Explicit non-goals, documented in `CONTRIBUTING.md`. All defensible as separate concerns:
+Explicit non-goals, documented in `CONTRIBUTING.md`. Both defensible as separate concerns:
 
 - **i18n**: use `react-i18next` or `LinguiJS` when you actually need translations; premature setup ages badly.
 - **Docker**: `dist/` is a folder of static files. Any container base with `nginx` works. No boilerplate needed.
-- **SSR**: see "why not Next.js" above.
+
+SSR is now supported as a first-class opt-in variant - see [What SPA SEO can and can't do](#what-spa-seo-can-and-cant-do) above.
 
 ## Why so many pieces at once? (PWA, Sentry, deploy, sitemap, generator...)
 
@@ -66,9 +73,9 @@ Removes every `src/**/example` directory, deletes the example routes and specs, 
 
 Yes, on purpose. Three artifacts make it fluent:
 
-- **`AGENTS.md`** at the root — conventions, testing patterns, mock recipes.
-- **`llms.txt`** — [llmstxt.org](https://llmstxt.org/) convention, retrievable in one fetch.
-- **`.claude/skills/`** — task-scoped skills bundled with the template. Claude Code discovers them automatically.
+- **`AGENTS.md`** at the root - conventions, testing patterns, mock recipes.
+- **`llms.txt`** - [llmstxt.org](https://llmstxt.org/) convention, retrievable in one fetch.
+- **`.claude/skills/`** - task-scoped skills bundled with the template. Claude Code discovers them automatically.
 
 Cursor, Codex, Aider, and any agent that reads `AGENTS.md` work out of the box.
 
@@ -78,6 +85,6 @@ Because I wrote Vue for a decade before touching React, and most of the strong o
 
 ## I disagree with `<opinion>`. Can I still use this?
 
-Probably. The pieces are loosely coupled. Swap TanStack Router for React Router, Tailwind for CSS Modules, jest-axe for something else — the rest keeps working. The generator, atomic layers, MSW single source, and CI matrix survive most substitutions.
+Probably. The pieces are loosely coupled. Swap TanStack Router for React Router, Tailwind for CSS Modules, jest-axe for something else - the rest keeps working. The generator, atomic layers, MSW single source, and CI matrix survive most substitutions.
 
 If a swap turns out to be genuinely painful, open an issue. That's useful signal.

@@ -555,7 +555,7 @@ export function Docs() {
           <h3 className="text-base font-semibold">4. Scan real pages in e2e</h3>
           <p className="max-w-2xl text-muted">
             The Playwright spec loops through the top-level routes, injects axe, and asserts zero
-            violations. A separate case exercises the error state — because a real screen-reader
+            violations. A separate case exercises the error state - because a real screen-reader
             user hits validation errors just as often as the happy path.
           </p>
           <CodeBlock code={a11yE2eSource} filePath="e2e/a11y.spec.ts" language="ts" />
@@ -564,7 +564,7 @@ export function Docs() {
           <p className="max-w-2xl text-muted">
             Storybook&apos;s a11y addon runs axe on the story you&apos;re viewing and shows the
             report in a side panel. It ships in <code>todo</code> mode by default so runs don&apos;t
-            fail CI while you triage — flip to <code>error</code> once your baseline is clean.
+            fail CI while you triage - flip to <code>error</code> once your baseline is clean.
           </p>
           <CodeBlock code={a11yPreviewSource} filePath=".storybook/preview.tsx" language="tsx" />
 
@@ -633,7 +633,7 @@ pnpm generate --kind page --name Dashboard`}
           <h3 className="text-base font-semibold">What the generator writes</h3>
           <p className="max-w-2xl text-muted">
             The generator is a single script with no framework-specific magic. Each kind maps to a
-            folder, and the templates are inline string builders — fork them freely.
+            folder, and the templates are inline string builders - fork them freely.
           </p>
           <CodeBlock code={generateScriptSource} filePath="scripts/generate.mjs" language="js" />
 
