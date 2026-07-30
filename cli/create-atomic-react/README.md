@@ -5,26 +5,27 @@ Scaffold a new project from the [react-app-boilerplate](../../) template.
 ## Usage
 
 ```bash
-# npm (npm 7+)
+# SPA (default): TanStack Router, PWA, everything client-side
 npm create atomic-react@latest my-app
+# or: pnpm create atomic-react my-app
+# or: yarn create atomic-react my-app
 
-# pnpm
-pnpm create atomic-react my-app
-
-# yarn
-yarn create atomic-react my-app
+# SSR: Vike + prerender per route → social crawlers see real <head> meta
+npm create atomic-react@latest my-app -- --ssr
 ```
 
 ## Non-interactive (scriptable)
 
 ```bash
 npm create atomic-react@latest my-app -- --yes --pm pnpm
+npm create atomic-react@latest my-app -- --yes --pm pnpm --ssr
 ```
 
 ## Options
 
 | Flag              | Values                | Default                  |
 | ----------------- | --------------------- | ------------------------ |
+| `--ssr`           | .                     | off (SPA template)       |
 | `--pm`            | `npm`, `pnpm`, `yarn` | detected from invocation |
 | `--yes`, `-y`     | .                     | prompts if omitted       |
 | `--no-install`    | .                     | installs by default      |
@@ -43,6 +44,9 @@ npx create-atomic-react init --yes
 
 ## What you get
 
-The template at `templates/react-ts/`. Vite + React + TS strict, Tailwind v4, TanStack Router + Query, react-hook-form + zod, MSW handlers shared across Vitest / Storybook / Playwright, atomic component structure, and configs pulled from published `@react-app-boilerplate/*` packages so updates flow via Renovate.
+Two templates. Pick at scaffold time - you cannot flip between them later without rewriting routes.
 
-See the [template README](../../templates/react-ts/README.md) for what's inside.
+- **Default (`templates/react-ts`)** - SPA. Vite + React + TS strict, Tailwind v4, TanStack Router + Query, react-hook-form + zod, MSW handlers shared across Vitest / Storybook / Playwright, atomic component structure, PWA via `vite-plugin-pwa`.
+- **`--ssr` (`templates/react-ts-ssr`)** - SSR. Same stack minus TanStack Router and PWA; routing + SSR via [Vike](https://vike.dev/) with `prerender: true`. Every route (`/`, `/docs`, `/example`, `/watch`) is prerendered to a real static `.html` file with `<title>` / `<meta>` / `og:*` tags in `<head>`. Deploys to static hosting (no server). Requires Node 22.12+ or 20.19+ (Vike's minimum).
+
+See the [SPA template README](../../templates/react-ts/README.md) or the [SSR template](../../templates/react-ts-ssr/) for what's inside each.

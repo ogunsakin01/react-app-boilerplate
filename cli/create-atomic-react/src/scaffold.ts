@@ -80,14 +80,15 @@ export async function runScaffold(args: CliArgs): Promise<void> {
 
   const spinner = p.spinner();
 
-  spinner.start('Copying template');
+  const variantLabel = args.variant === 'react-ts-ssr' ? ' (SSR / Vike)' : '';
+  spinner.start(`Copying template${variantLabel}`);
   await mkdir(targetDir, { recursive: true });
-  await copyTemplate(targetDir);
+  await copyTemplate(targetDir, args.variant);
   await renameProject(targetDir, projectName);
   spinner.stop(
     scaffoldInPlace
-      ? `Template copied → current directory (${pc.bold(projectName)})`
-      : `Template copied → ${pc.bold(relative(process.cwd(), targetDir))}`,
+      ? `Template${variantLabel} copied → current directory (${pc.bold(projectName)})`
+      : `Template${variantLabel} copied → ${pc.bold(relative(process.cwd(), targetDir))}`,
   );
 
   if (doGit) {

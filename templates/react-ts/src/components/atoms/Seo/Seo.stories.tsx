@@ -9,7 +9,7 @@ const meta: Meta<typeof Seo> = {
     docs: {
       description: {
         component:
-          'Emits the standard SEO meta tags (title, description, canonical, Open Graph, Twitter card). React 19 hoists these into <head> automatically — the story canvas is intentionally blank because the component renders no visible UI.',
+          'Emits the standard SEO meta tags (title, description, canonical, Open Graph, Twitter card). React 19 hoists these into <head> automatically - the story canvas is intentionally blank because the component renders no visible UI.',
       },
     },
   },

@@ -1,10 +1,12 @@
 import yargsParser from 'yargs-parser';
 
 export type PackageManager = 'npm' | 'pnpm' | 'yarn';
+export type TemplateVariant = 'react-ts' | 'react-ts-ssr';
 
 export interface CliArgs {
   projectName?: string;
   pm?: PackageManager;
+  variant: TemplateVariant;
   yes: boolean;
   install: boolean;
   git: boolean;
@@ -34,9 +36,9 @@ function parsePm(pm: unknown): PackageManager | undefined {
 export function parseArgs(argv: string[]): CliArgs {
   const parsed = yargsParser(argv, {
     string: ['pm'],
-    boolean: ['yes', 'install', 'git', 'help', 'version'],
+    boolean: ['yes', 'install', 'git', 'help', 'version', 'ssr'],
     alias: { y: 'yes', h: 'help', v: 'version' },
-    default: { yes: false, install: true, git: true },
+    default: { yes: false, install: true, git: true, ssr: false },
     configuration: { 'boolean-negation': true },
   });
 
@@ -45,6 +47,7 @@ export function parseArgs(argv: string[]): CliArgs {
   return {
     projectName,
     pm: parsePm(parsed.pm),
+    variant: parsed.ssr ? 'react-ts-ssr' : 'react-ts',
     yes: Boolean(parsed.yes),
     install: parsed.install !== false,
     git: parsed.git !== false,
@@ -83,6 +86,7 @@ Init. add the shared @react-app-boilerplate/* configs to an existing project
                      without overwriting your files.
 
 Scaffold options:
+  --ssr                         Use the SSR (Vike + prerender) variant. Default is SPA (TanStack Router).
   --pm <npm|pnpm|yarn>          Package manager to use for install
   --yes, -y                     Skip prompts; use defaults for missing values
   --no-install                  Skip dependency install
@@ -98,8 +102,11 @@ Common:
   --version, -v                 Show version
 
 Examples:
-  # Fresh project in a new folder
+  # Fresh SPA project (default)
   npm create atomic-react@latest my-app
+
+  # Fresh project with SSR (Vike + prerender per route → SEO/social previews work)
+  npm create atomic-react@latest my-app -- --ssr
 
   # Fresh project in the current folder (must be empty)
   mkdir my-app && cd my-app

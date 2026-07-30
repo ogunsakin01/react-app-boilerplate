@@ -1,5 +1,5 @@
 name: Feature request
-description: 'Propose a change or addition. Note: this boilerplate is opinionated — excluded categories (auth, Redux/Zustand, i18n, Docker) will not be added.'
+description: 'Propose a change or addition. Note: this boilerplate is opinionated - excluded categories (auth, Redux/Zustand, i18n, Docker) will not be added.'
 title: 'feat: <short description>'
 labels: ['enhancement', 'triage']
 body:
@@ -18,7 +18,7 @@ body:
     id: proposal
     attributes:
       label: Proposal
-      description: What should change? Be specific — file paths, APIs, behavior.
+      description: What should change? Be specific - file paths, APIs, behavior.
     validations:
       required: true
   - type: textarea

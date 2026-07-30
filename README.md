@@ -1,14 +1,16 @@
 # react-app-boilerplate
 
-**The opinionated React + TypeScript + Vite boilerplate.** Scaffold a production-ready SPA in one command with TanStack Router, TanStack Query, Tailwind CSS v4, MSW, Storybook, Playwright, jest-axe accessibility testing, atomic-design components, ESLint 9 flat config, husky commit hooks, Renovate, and Changesets — zero configuration required.
+**The opinionated React + TypeScript + Vite boilerplate.** Scaffold a production-ready SPA - or an SSR app with prerendered SEO - in one command with TanStack Router (SPA) or Vike (SSR), TanStack Query, Tailwind CSS v4, MSW, Storybook, Playwright, jest-axe accessibility testing, atomic-design components, ESLint 9 flat config, husky commit hooks, Renovate, and Changesets - zero configuration required.
 
 ```bash
+# SPA (default): TanStack Router, PWA, everything client-side
 npm create atomic-react@latest my-app
-# or: pnpm create atomic-react my-app
-# or: yarn create atomic-react my-app
+
+# SSR: Vike + prerender per route → social crawlers see real <head> meta
+npm create atomic-react@latest my-app -- --ssr
 ```
 
-Ships as three pieces: the template at `templates/react-ts`, four shareable configs published to npm under `@react-app-boilerplate/*`, and the `create-atomic-react` scaffolding CLI.
+Ships as four pieces: two templates (`templates/react-ts` for SPA, `templates/react-ts-ssr` for Vike), four shareable configs published to npm under `@react-app-boilerplate/*`, and the `create-atomic-react` scaffolding CLI.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ogunsakin01/react-app-boilerplate/ci.yml?branch=main&label=CI&style=flat-square)](https://github.com/ogunsakin01/react-app-boilerplate/actions/workflows/ci.yml)
 [![CLI matrix](https://img.shields.io/github/actions/workflow/status/ogunsakin01/react-app-boilerplate/cli-matrix.yml?branch=main&label=CLI%20matrix&style=flat-square)](https://github.com/ogunsakin01/react-app-boilerplate/actions/workflows/cli-matrix.yml)
@@ -48,13 +50,13 @@ If you code with an AI agent (Claude Code, Cursor, Codex, Aider, etc.), scaffold
 
 Located at `.claude/skills/` in the scaffolded project. Claude Code auto-discovers them when the project is opened; other agents can be pointed at them manually.
 
-- **`generate-component`** — Scaffold a new atom / molecule / organism / template / page with `.tsx` + a11y-tested `.test.tsx` + `.stories.tsx` + `index.ts` (plus route + Playwright spec for pages). Wraps `pnpm generate`.
-- **`add-msw-handler`** — Add a mocked HTTP endpoint to `src/mocks/handlers.ts` so it's picked up by Vitest, Storybook, dev, and Playwright.
-- **`add-env-var`** — Add a typed environment variable. Extends the zod schema, `.env.example`, and inferred types in one go.
-- **`add-seo`** — Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page via the `<Seo>` atom.
-- **`configure-pwa`** — Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
-- **`configure-sentry`** — Enable Sentry (DSN), tune sample rates, wire route errors, add replay, upload source maps.
-- **`configure-deploy`** — Ship `dist/` to S3 / R2 / Spaces / MinIO, invalidate CloudFront, set CDN base URL.
+- **`generate-component`** - Scaffold a new atom / molecule / organism / template / page with `.tsx` + a11y-tested `.test.tsx` + `.stories.tsx` + `index.ts` (plus route + Playwright spec for pages). Wraps `pnpm generate`.
+- **`add-msw-handler`** - Add a mocked HTTP endpoint to `src/mocks/handlers.ts` so it's picked up by Vitest, Storybook, dev, and Playwright.
+- **`add-env-var`** - Add a typed environment variable. Extends the zod schema, `.env.example`, and inferred types in one go.
+- **`add-seo`** - Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page via the `<Seo>` atom.
+- **`configure-pwa`** - Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
+- **`configure-sentry`** - Enable Sentry (DSN), tune sample rates, wire route errors, add replay, upload source maps.
+- **`configure-deploy`** - Ship `dist/` to S3 / R2 / Spaces / MinIO, invalidate CloudFront, set CDN base URL.
 
 When an agent scaffolds a component, it uses the same `pnpm generate` you do. Output matches the four-file convention without you re-explaining atoms/molecules/organisms every conversation.
 
@@ -73,7 +75,7 @@ A single-project React app that is production-ready on day one:
 - **ESLint 9 flat config** and **Prettier** ([eslint.org](https://eslint.org/), [prettier.io](https://prettier.io/)).
 - **husky** pre-commit + commit-msg hooks, **lint-staged**, **commitlint** enforcing Conventional Commits ([typicode.github.io/husky](https://typicode.github.io/husky/), [commitlint.js.org](https://commitlint.js.org/), [conventionalcommits.org](https://www.conventionalcommits.org/)).
 - **Accessibility** enforced at three tiers: `jest-axe` in unit tests, `@storybook/addon-a11y` in Storybook, `@axe-core/playwright` scanning every e2e route. Generated component tests include an axe assertion by default.
-- **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time — always in sync, zero manual steps. **SPA caveat**: social preview crawlers (X, LinkedIn, Slack, Discord) don't run JS, so they see the empty shell. If link previews matter, switch to SSR/SSG for those routes — see [FAQ](./docs/FAQ.md#what-spa-seo-can-and-cant-do).
+- **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time - always in sync, zero manual steps. **SPA caveat**: social preview crawlers (X, LinkedIn, Slack, Discord) don't run JS, so they see the empty shell. If link previews matter, scaffold with `--ssr` - the Vike variant prerenders every route to real HTML with `<head>` meta baked in. See [FAQ](./docs/FAQ.md#what-spa-seo-can-and-cant-do).
 - **PWA** support via `vite-plugin-pwa`: manifest, precached shell, offline fallback, service worker, and a wired-up `<PwaUpdate>` toast that prompts the user to reload when a new version is available.
 - **Sentry** error tracking + performance monitoring, opt-in via `VITE_SENTRY_DSN` (empty DSN = no-op, no bundle cost in dev).
 - **Deploy anywhere.** Managed hosts work zero-config: `vercel.json`, `netlify.toml`, and `public/_redirects` + `public/_headers` (Cloudflare Pages) ship in the template. For S3-compatible buckets (AWS S3, Cloudflare R2, DigitalOcean Spaces, MinIO), `pnpm deploy` shells out to the AWS CLI with two cache-control tiers and optional CloudFront invalidation. `VITE_BASE_URL` sets the CDN asset prefix at build time.
@@ -156,12 +158,15 @@ npx create-atomic-react init --yes --pm pnpm
 
 | Flag              | Values                | Applies to     |
 | ----------------- | --------------------- | -------------- |
+| `--ssr`           | (boolean)             | scaffold       |
 | `--pm`            | `npm`, `pnpm`, `yarn` | scaffold, init |
 | `--yes`, `-y`     | (boolean)             | scaffold, init |
 | `--no-install`    | (boolean)             | scaffold, init |
 | `--no-git`        | (boolean)             | scaffold       |
 | `--help`, `-h`    | (boolean)             | both           |
 | `--version`, `-v` | (boolean)             | scaffold       |
+
+`--ssr` picks the [`templates/react-ts-ssr`](./templates/react-ts-ssr) variant (Vike + `prerender: true`) instead of the default SPA template. Every route compiles to a static `.html` file with real `<head>` meta tags - same static-hosting deploy story, but social crawlers now see `og:*` / `twitter:*` tags because they're in the HTML source. Under the hood: file-based routing via `pages/+Page.tsx`, TanStack Router is not used, `vite-plugin-pwa` is not shipped, `.nvmrc` bumps to 22.12 (Vike's minimum).
 
 Detection order: CLI flag wins, then the package manager used to invoke (via `npm_config_user_agent`), then `npm` as fallback.
 
