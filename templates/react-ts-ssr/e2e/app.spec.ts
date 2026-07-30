@@ -14,6 +14,7 @@ test('home page renders the docs + example cta cards', async ({ page }) => {
 
 test('example page loads a video onto /watch when a URL is submitted', async ({ page }) => {
   await page.goto('/example');
+  await page.waitForLoadState('networkidle');
   await page.getByRole('textbox').fill(YT_URL);
   await page.getByRole('button', { name: /load video/i }).click();
 
@@ -27,6 +28,7 @@ test('example page loads a video onto /watch when a URL is submitted', async ({ 
 
 test('invalid URL is rejected with a validation error', async ({ page }) => {
   await page.goto('/example');
+  await page.waitForLoadState('networkidle');
   await page.getByRole('textbox').fill('https://vimeo.com/12345');
   await page.getByRole('button', { name: /load video/i }).click();
   await expect(page.getByRole('alert')).toContainText(/YouTube URL/i);

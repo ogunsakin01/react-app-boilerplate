@@ -19,6 +19,7 @@ for (const { name, path } of routes) {
 
 test('example page announces validation errors accessibly', async ({ page }) => {
   await page.goto('/example');
+  await page.waitForLoadState('networkidle');
   await page.getByRole('textbox').fill('https://vimeo.com/12345');
   await page.getByRole('button', { name: /load video/i }).click();
   await expect(page.getByRole('alert')).toBeVisible();

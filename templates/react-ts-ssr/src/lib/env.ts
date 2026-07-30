@@ -21,4 +21,13 @@ export function parseEnv(raw: unknown): Env {
   return parsed.data;
 }
 
-export const env: Env = parseEnv(import.meta.env);
+// Read each key individually. Vike replaces the bare `import.meta.env` expression
+// with `null`, so spreading the whole object is a no-op under Vike -- see
+// https://vike.dev/env
+export const env: Env = parseEnv({
+  VITE_APP_TITLE: import.meta.env.VITE_APP_TITLE,
+  VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+  VITE_SENTRY_ENVIRONMENT: import.meta.env.VITE_SENTRY_ENVIRONMENT,
+  VITE_SENTRY_TRACES_SAMPLE_RATE: import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE,
+  VITE_OEMBED_BASE_URL: import.meta.env.VITE_OEMBED_BASE_URL,
+});
