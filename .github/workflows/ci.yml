@@ -46,9 +46,12 @@ jobs:
         run: pnpm build
 
       - name: Upload coverage to Codecov
-        if: always()
+        if: ${{ !cancelled() && hashFiles('templates/react-ts/coverage/lcov.info') != '' }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: templates/react-ts/coverage/lcov.info
+          slug: ogunsakin01/react-app-boilerplate
+          flags: template-react-ts
           fail_ci_if_error: false
-          disable_search: false
+          verbose: true

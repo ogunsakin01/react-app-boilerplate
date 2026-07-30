@@ -1,0 +1,46 @@
+codecov:
+  require_ci_to_pass: true
+  notify:
+    wait_for_ci: true
+
+coverage:
+  precision: 1
+  round: down
+  range: '70...95'
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: true
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+        informational: true
+
+comment:
+  layout: 'reach, diff, flags, files'
+  behavior: default
+  require_changes: true
+
+# Coverage lives under templates/react-ts because that's the only workspace
+# that ships app code. Shared config packages have no runtime code to cover.
+component_management:
+  individual_components:
+    - component_id: template
+      name: template-react-ts
+      paths:
+        - templates/react-ts/src/**
+
+ignore:
+  - 'templates/react-ts/src/**/*.stories.tsx'
+  - 'templates/react-ts/src/**/*.test.tsx'
+  - 'templates/react-ts/src/**/*.test.ts'
+  - 'templates/react-ts/src/**/*.d.ts'
+  - 'templates/react-ts/src/routeTree.gen.ts'
+  - 'templates/react-ts/src/mocks/**'
+  - 'templates/react-ts/src/test/**'
+  - 'cli/**'
+  - 'packages/**'
+  - 'scripts/**'
