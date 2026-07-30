@@ -9,15 +9,13 @@ const config = {
   staticDirs: ['../public'],
   async viteFinal(viteConfig) {
     const { fileURLToPath } = await import('node:url');
-    const stubUrl = new URL('./stubs/pwa-register.js', import.meta.url);
-    viteConfig.plugins = (viteConfig.plugins ?? []).filter((plugin) => {
-      const name = Array.isArray(plugin) ? plugin[0]?.name : plugin?.name;
-      return !(typeof name === 'string' && name.startsWith('vite-plugin-pwa'));
-    });
+    const pageContextStub = new URL('./stubs/vike-react-usePageContext.js', import.meta.url);
+    const clientRouterStub = new URL('./stubs/vike-client-router.js', import.meta.url);
     viteConfig.resolve = viteConfig.resolve ?? {};
     viteConfig.resolve.alias = {
       ...(viteConfig.resolve.alias ?? {}),
-      'virtual:pwa-register/react': fileURLToPath(stubUrl),
+      'vike-react/usePageContext': fileURLToPath(pageContextStub),
+      'vike/client/router': fileURLToPath(clientRouterStub),
     };
     return viteConfig;
   },

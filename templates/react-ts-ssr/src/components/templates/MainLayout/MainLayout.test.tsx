@@ -1,10 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const pageCtx = { urlPathname: '/' };
 
 vi.mock('vike-react/usePageContext', () => ({
-  usePageContext: () => ({ urlPathname: '/' }),
+  usePageContext: () => pageCtx,
 }));
 
 import { ThemeProvider } from '@/providers/ThemeProvider';
@@ -20,6 +22,10 @@ function renderLayout() {
   );
 }
 
+beforeEach(() => {
+  pageCtx.urlPathname = '/';
+});
+
 describe('MainLayout', () => {
   it('renders the primary nav, GitHub link, and children', () => {
     renderLayout();
@@ -31,6 +37,15 @@ describe('MainLayout', () => {
       expect.stringContaining('github.com'),
     );
     expect(screen.getByText('page body')).toBeInTheDocument();
+  });
+
+  it('applies the active class to the nav link matching the current pathname', () => {
+    pageCtx.urlPathname = '/docs';
+    renderLayout();
+    const docsLink = screen.getByRole('link', { name: /docs/i });
+    expect(docsLink.className).toMatch(/text-fg font-medium/);
+    const exampleLink = screen.getByRole('link', { name: /example/i });
+    expect(exampleLink.className).toMatch(/text-muted/);
   });
 
   it('toggles the theme via the header button', async () => {

@@ -7,6 +7,8 @@ export interface CliArgs {
   projectName?: string;
   pm?: PackageManager;
   variant: TemplateVariant;
+  mui: boolean;
+  reactAria: boolean;
   yes: boolean;
   install: boolean;
   git: boolean;
@@ -36,10 +38,10 @@ function parsePm(pm: unknown): PackageManager | undefined {
 export function parseArgs(argv: string[]): CliArgs {
   const parsed = yargsParser(argv, {
     string: ['pm'],
-    boolean: ['yes', 'install', 'git', 'help', 'version', 'ssr'],
+    boolean: ['yes', 'install', 'git', 'help', 'version', 'ssr', 'mui', 'react-aria'],
     alias: { y: 'yes', h: 'help', v: 'version' },
-    default: { yes: false, install: true, git: true, ssr: false },
-    configuration: { 'boolean-negation': true },
+    default: { yes: false, install: true, git: true, ssr: false, mui: false, 'react-aria': false },
+    configuration: { 'boolean-negation': true, 'camel-case-expansion': true },
   });
 
   const projectName = parsed._[0] ? String(parsed._[0]) : undefined;
@@ -48,6 +50,8 @@ export function parseArgs(argv: string[]): CliArgs {
     projectName,
     pm: parsePm(parsed.pm),
     variant: parsed.ssr ? 'react-ts-ssr' : 'react-ts',
+    mui: Boolean(parsed.mui),
+    reactAria: Boolean(parsed.reactAria ?? parsed['react-aria']),
     yes: Boolean(parsed.yes),
     install: parsed.install !== false,
     git: parsed.git !== false,
@@ -87,6 +91,8 @@ Init. add the shared @react-app-boilerplate/* configs to an existing project
 
 Scaffold options:
   --ssr                         Use the SSR (Vike + prerender) variant. Default is SPA (TanStack Router).
+  --mui                         Add Material UI (@mui/material + emotion) and a MuiButton example atom
+  --react-aria                  Add React Aria Components and an AriaButton example atom
   --pm <npm|pnpm|yarn>          Package manager to use for install
   --yes, -y                     Skip prompts; use defaults for missing values
   --no-install                  Skip dependency install

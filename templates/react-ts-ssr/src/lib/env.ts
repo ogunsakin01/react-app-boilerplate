@@ -9,14 +9,16 @@ const envSchema = z.object({
   VITE_OEMBED_BASE_URL: z.string().url().default('https://noembed.com/embed'),
 });
 
-// import.meta.env can be undefined during Vike prerender; fall back to defaults.
-const rawEnv =
-  typeof import.meta.env === 'object' && import.meta.env !== null ? import.meta.env : {};
-const parsed = envSchema.safeParse(rawEnv);
+export type Env = z.infer<typeof envSchema>;
 
-if (!parsed.success) {
-  const details = JSON.stringify(parsed.error.flatten(), null, 2);
-  throw new Error(`Invalid environment variables:\n${details}`);
+export function parseEnv(raw: unknown): Env {
+  const source = typeof raw === 'object' && raw !== null ? raw : {};
+  const parsed = envSchema.safeParse(source);
+  if (!parsed.success) {
+    const details = JSON.stringify(parsed.error.flatten(), null, 2);
+    throw new Error(`Invalid environment variables:\n${details}`);
+  }
+  return parsed.data;
 }
 
-export const env = parsed.data;
+export const env: Env = parseEnv(import.meta.env);

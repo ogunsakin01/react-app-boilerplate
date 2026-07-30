@@ -159,12 +159,16 @@ npx create-atomic-react init --yes --pm pnpm
 | Flag              | Values                | Applies to     |
 | ----------------- | --------------------- | -------------- |
 | `--ssr`           | (boolean)             | scaffold       |
+| `--mui`           | (boolean)             | scaffold       |
+| `--react-aria`    | (boolean)             | scaffold       |
 | `--pm`            | `npm`, `pnpm`, `yarn` | scaffold, init |
 | `--yes`, `-y`     | (boolean)             | scaffold, init |
 | `--no-install`    | (boolean)             | scaffold, init |
 | `--no-git`        | (boolean)             | scaffold       |
 | `--help`, `-h`    | (boolean)             | both           |
 | `--version`, `-v` | (boolean)             | scaffold       |
+
+`--mui` and `--react-aria` are also offered as interactive prompts when scaffolding without `--yes`. Each adds the dep + a small example atom (`MuiButton` or `AriaButton`) with test + story. They compose: pass both flags to preinstall both alongside the default Tailwind primitives.
 
 `--ssr` picks the [`templates/react-ts-ssr`](./templates/react-ts-ssr) variant (Vike + `prerender: true`) instead of the default SPA template. Every route compiles to a static `.html` file with real `<head>` meta tags - same static-hosting deploy story, but social crawlers now see `og:*` / `twitter:*` tags because they're in the HTML source. Under the hood: file-based routing via `pages/+Page.tsx`, TanStack Router is not used, `vite-plugin-pwa` is not shipped, `.nvmrc` bumps to 22.12 (Vike's minimum).
 

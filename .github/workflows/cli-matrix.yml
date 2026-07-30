@@ -12,12 +12,13 @@ concurrency:
 
 jobs:
   scaffold:
-    name: scaffold (${{ matrix.pm }})
+    name: scaffold (${{ matrix.pm }}, ${{ matrix.variant }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         pm: [npm, pnpm, yarn]
+        variant: [spa, ssr]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,12 +53,13 @@ jobs:
         id: scaffold
         env:
           TARBALL_DIR: ${{ steps.pack.outputs.dir }}
+          SSR_FLAG: ${{ matrix.variant == 'ssr' && '--ssr' || '' }}
         run: |
           SCAFFOLD_ROOT="$RUNNER_TEMP/scaffold"
           mkdir -p "$SCAFFOLD_ROOT"
           cd "$SCAFFOLD_ROOT"
           node "$GITHUB_WORKSPACE/cli/create-atomic-react/dist/index.js" \
-            my-app --yes --pm ${{ matrix.pm }} --no-install --no-git
+            my-app --yes --pm ${{ matrix.pm }} --no-install --no-git $SSR_FLAG
           cd my-app
           node -e '
             const fs = require("fs");

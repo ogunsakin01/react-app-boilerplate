@@ -25,7 +25,7 @@ const meta: Meta<typeof CtaCard> = {
     ),
     title: 'Documentation',
     description: 'Every pattern this boilerplate ships, explained.',
-    to: '/docs',
+    href: '/docs',
     ctaLabel: 'Browse docs',
   },
 };

@@ -12,8 +12,14 @@ concurrency:
 
 jobs:
   playwright:
-    name: playwright (chromium)
+    name: playwright (${{ matrix.template }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - '@react-app-boilerplate/template-react-ts'
+          - '@react-app-boilerplate/template-react-ts-ssr'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,10 +37,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers + system deps
-        run: pnpm --filter @react-app-boilerplate/template-react-ts exec playwright install --with-deps chromium
+        run: pnpm --filter ${{ matrix.template }} exec playwright install --with-deps chromium
 
       - name: Run Playwright
-        run: pnpm --filter @react-app-boilerplate/template-react-ts e2e
+        run: pnpm --filter ${{ matrix.template }} e2e
         env:
           CI: 'true'
 
@@ -42,6 +48,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: templates/react-ts/playwright-report/
+          name: playwright-report-${{ matrix.template == '@react-app-boilerplate/template-react-ts' && 'spa' || 'ssr' }}
+          path: templates/*/playwright-report/
           retention-days: 14

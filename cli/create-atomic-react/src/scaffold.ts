@@ -2,6 +2,7 @@ import { mkdir, readdir, stat } from 'node:fs/promises';
 import { basename, relative, resolve } from 'node:path';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
+import { applyMuiAddon, applyReactAriaAddon } from './addons.js';
 import type { CliArgs } from './args.js';
 import { copyTemplate, renameProject } from './copy.js';
 import { detectPackageManager } from './detect.js';
@@ -74,6 +75,13 @@ export async function runScaffold(args: CliArgs): Promise<void> {
 
   const pm = args.pm ?? (args.yes ? detected : await promptPackageManager(detected));
 
+  const wantMui = args.yes
+    ? args.mui
+    : args.mui || (await promptConfirm('Add Material UI (@mui/material)?', false));
+  const wantReactAria = args.yes
+    ? args.reactAria
+    : args.reactAria || (await promptConfirm('Add React Aria Components?', false));
+
   const doInstall =
     !args.yes && args.install ? await promptConfirm('Install dependencies?') : args.install;
   const doGit = !args.yes && args.git ? await promptConfirm('Initialize a git repo?') : args.git;
@@ -90,6 +98,18 @@ export async function runScaffold(args: CliArgs): Promise<void> {
       ? `Template${variantLabel} copied → current directory (${pc.bold(projectName)})`
       : `Template${variantLabel} copied → ${pc.bold(relative(process.cwd(), targetDir))}`,
   );
+
+  if (wantMui) {
+    spinner.start('Adding Material UI + MuiButton atom');
+    await applyMuiAddon(targetDir);
+    spinner.stop('Material UI added (src/components/atoms/MuiButton).');
+  }
+
+  if (wantReactAria) {
+    spinner.start('Adding React Aria Components + AriaButton atom');
+    await applyReactAriaAddon(targetDir);
+    spinner.stop('React Aria added (src/components/atoms/AriaButton).');
+  }
 
   if (doGit) {
     spinner.start('Initializing git');

@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: env.VITE_BASE_URL || '/',
+    server: { port: 5173, strictPort: false },
+    preview: { port: 4173 },
     plugins: [vike(), react(), tailwindcss()],
     resolve: {
       alias: {
