@@ -3,7 +3,7 @@
   publish = "dist/client"
 
 [build.environment]
-  NODE_VERSION = "22.12"
+  NODE_VERSION = "22.13"
 
 # No SPA fallback needed. Vike prerenders every route to its own .html file,
 # so /docs, /example, /watch, and /404 are all real files on disk.

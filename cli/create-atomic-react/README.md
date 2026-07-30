@@ -57,7 +57,7 @@ npx create-atomic-react init --yes
 Two templates. Pick at scaffold time - you cannot flip between them later without rewriting routes.
 
 - **Default (`templates/react-ts`)** - SPA. Vite + React + TS strict, Tailwind v4, TanStack Router + Query, react-hook-form + zod, MSW handlers shared across Vitest / Storybook / Playwright, atomic component structure, PWA via `vite-plugin-pwa`.
-- **`--ssr` (`templates/react-ts-ssr`)** - SSR. Same stack minus TanStack Router and PWA; routing + SSR via [Vike](https://vike.dev/) with `prerender: true`. Every route (`/`, `/docs`, `/example`, `/watch`) is prerendered to a real static `.html` file with `<title>` / `<meta>` / `og:*` tags in `<head>`. Deploys to static hosting (no server). Requires Node 22.12+ or 20.19+ (Vike's minimum).
+- **`--ssr` (`templates/react-ts-ssr`)** - SSR. Same stack minus TanStack Router and PWA; routing + SSR via [Vike](https://vike.dev/) with `prerender: true`. Every route (`/`, `/docs`, `/example`, `/watch`) is prerendered to a real static `.html` file with `<title>` / `<meta>` / `og:*` tags in `<head>`. Deploys to static hosting (no server). Requires Node 22.13+ or 20.19+ (Vike + downstream ESLint deps).
 
 Opt-in library addons (both templates):
 

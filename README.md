@@ -170,7 +170,7 @@ npx create-atomic-react init --yes --pm pnpm
 
 `--mui` and `--react-aria` are also offered as interactive prompts when scaffolding without `--yes`. Each adds the dep + a small example atom (`MuiButton` or `AriaButton`) with test + story. They compose: pass both flags to preinstall both alongside the default Tailwind primitives.
 
-`--ssr` picks the [`templates/react-ts-ssr`](./templates/react-ts-ssr) variant (Vike + `prerender: true`) instead of the default SPA template. Every route compiles to a static `.html` file with real `<head>` meta tags - same static-hosting deploy story, but social crawlers now see `og:*` / `twitter:*` tags because they're in the HTML source. Under the hood: file-based routing via `pages/+Page.tsx`, TanStack Router is not used, `vite-plugin-pwa` is not shipped, `.nvmrc` bumps to 22.12 (Vike's minimum).
+`--ssr` picks the [`templates/react-ts-ssr`](./templates/react-ts-ssr) variant (Vike + `prerender: true`) instead of the default SPA template. Every route compiles to a static `.html` file with real `<head>` meta tags - same static-hosting deploy story, but social crawlers now see `og:*` / `twitter:*` tags because they're in the HTML source. Under the hood: file-based routing via `pages/+Page.tsx`, TanStack Router is not used, `vite-plugin-pwa` is not shipped, `.nvmrc` bumps to 22.13 (Vike needs 22.12+, and modern ESLint transitive deps need 22.13+).
 
 Detection order: CLI flag wins, then the package manager used to invoke (via `npm_config_user_agent`), then `npm` as fallback.
 
