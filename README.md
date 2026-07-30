@@ -16,6 +16,7 @@ Ships as four pieces: two templates (`templates/react-ts` for SPA, `templates/re
 [![CLI matrix](https://img.shields.io/github/actions/workflow/status/ogunsakin01/react-app-boilerplate/cli-matrix.yml?branch=main&label=CLI%20matrix&style=flat-square)](https://github.com/ogunsakin01/react-app-boilerplate/actions/workflows/cli-matrix.yml)
 [![E2E](https://img.shields.io/github/actions/workflow/status/ogunsakin01/react-app-boilerplate/e2e.yml?branch=main&label=E2E&style=flat-square)](https://github.com/ogunsakin01/react-app-boilerplate/actions/workflows/e2e.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/ogunsakin01/react-app-boilerplate?label=coverage&style=flat-square)](https://codecov.io/gh/ogunsakin01/react-app-boilerplate)
+[![Code quality](https://img.shields.io/codefactor/grade/github/ogunsakin01/react-app-boilerplate?label=code%20quality&style=flat-square)](https://www.codefactor.io/repository/github/ogunsakin01/react-app-boilerplate)
 [![npm](https://img.shields.io/npm/v/create-atomic-react?label=npm&color=blue&style=flat-square)](https://www.npmjs.com/package/create-atomic-react)
 [![Downloads](https://img.shields.io/npm/dt/create-atomic-react?label=downloads&color=blue&style=flat-square)](https://www.npmjs.com/package/create-atomic-react)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](./LICENSE)
