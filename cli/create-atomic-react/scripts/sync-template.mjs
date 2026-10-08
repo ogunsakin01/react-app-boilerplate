@@ -1,7 +1,7 @@
 // Copies templates/{variant}/ into cli/create-atomic-react/templates/{variant}/
 // so the CLI ships with each template embedded, and rewrites `workspace:*` deps
 // to real versions from the monorepo's packages/*.
-import { cp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -57,6 +57,9 @@ for (const variant of VARIANTS) {
   }
 
   await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+
+  // npm strips .gitignore from published tarballs; copy.ts renames it back.
+  await rename(join(dest, '.gitignore'), join(dest, '_gitignore'));
 
   console.log(`Synced template: ${src} → ${dest}`);
 }

@@ -6,3 +6,4 @@ node_modules
 # Ad-hoc test scaffolds — never commit.
 smoke-app
 smoke-*/
+coverage
