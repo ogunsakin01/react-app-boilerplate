@@ -25,6 +25,9 @@
     "typescript",
     "tsconfig",
     "react",
-    "vite"
+    "vite",
+    "shareable-config",
+    "react-app-boilerplate",
+    "create-atomic-react"
   ]
 }
