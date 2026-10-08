@@ -2,7 +2,7 @@
 
 Guidance for AI coding agents (Claude Code, Cursor, Codex, Aider, and similar) working in this project. It was scaffolded with [`create-atomic-react`](https://www.npmjs.com/package/create-atomic-react) (SPA variant): React 19 + TypeScript + Vite, TanStack Router + Query, Tailwind CSS v4, MSW, Storybook, Vitest + jest-axe, Playwright, PWA and Sentry.
 
-Commands below use `pnpm`. If the project uses npm or yarn, substitute it - the git hooks in `.husky/` also call `pnpm`, so update them too.
+Commands below use `pnpm`. If the project was scaffolded with npm or yarn, substitute it - `create-atomic-react` already adapted the git hooks, CI workflows, the Playwright web server and `netlify.toml`.
 
 ## Component conventions
 

@@ -1,8 +1,8 @@
-import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { appendAgentsNote, applyMuiAddon, applyReactAriaAddon } from './addons.js';
+import { appendAgentsNote, applyMuiAddon, applyReactAriaAddon, registerAtom } from './addons.js';
 
 const AGENTS = '# AGENTS.md\n\nBase guidance.\n';
 
@@ -75,5 +75,30 @@ describe('addons', () => {
     const agents = await readFile(join(dir, 'AGENTS.md'), 'utf8');
     expect(agents.indexOf('## Material UI')).toBeLessThan(agents.indexOf('## React Aria'));
     expect(agents.endsWith('\n')).toBe(true);
+  });
+
+  describe('registerAtom', () => {
+    const BARREL =
+      "export * from './Button';\n// Delete the following line when you remove the example (`src/**/example`).\nexport * from './example';\n";
+
+    it('adds the atom above the example re-export, once', async () => {
+      await mkdir(join(dir, 'src/components/atoms'), { recursive: true });
+      await writeFile(join(dir, 'src/components/atoms/index.ts'), BARREL);
+
+      await registerAtom(dir, 'MuiButton');
+      await registerAtom(dir, 'MuiButton');
+
+      expect(await readFile(join(dir, 'src/components/atoms/index.ts'), 'utf8')).toBe(
+        "export * from './Button';\nexport * from './MuiButton';\n// Delete the following line when you remove the example (`src/**/example`).\nexport * from './example';\n",
+      );
+    });
+  });
+
+  it('--mui barrel exports the Props type', async () => {
+    await applyMuiAddon(dir);
+
+    expect(await readFile(join(dir, 'src/components/atoms/MuiButton/index.ts'), 'utf8')).toContain(
+      "export type { MuiButtonProps } from './MuiButton';",
+    );
   });
 });

@@ -1,15 +1,11 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import type { InitArgs, PackageManager } from './args.js';
 import { detectPackageManager } from './detect.js';
 import { runAddDev } from './install.js';
 import { promptConfirm, promptPackageManager } from './prompts.js';
-
-const HERE = dirname(fileURLToPath(import.meta.url));
-const ATOMIC_SCAFFOLD_SRC = resolve(HERE, '../templates/react-ts/src/components/atoms/Button');
 
 const SHARED_PACKAGES = [
   '@react-app-boilerplate/eslint-config',
@@ -21,7 +17,7 @@ const SHARED_PACKAGES = [
 // Peer deps that consumers must install alongside a given shared config.
 const PEER_DEPS: Record<string, string[]> = {
   '@react-app-boilerplate/eslint-config': ['eslint'],
-  '@react-app-boilerplate/vitest-config': ['vitest', '@vitest/coverage-v8'],
+  '@react-app-boilerplate/vitest-config': ['vitest', '@vitest/coverage-v8', 'jsdom'],
   '@react-app-boilerplate/playwright-config': ['@playwright/test'],
 };
 
@@ -62,7 +58,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  test: vitestReactConfig(),
+  // The shared config defaults to ./src/test/setup.ts, which an existing
+  // project won't have. Add your own setup file here when you need one.
+  test: vitestReactConfig({ setupFiles: [] }),
 });
 `,
   'e2e/playwright.config.ts': `import { defineConfig } from '@playwright/test';
@@ -71,6 +69,11 @@ import { playwrightViteConfig } from '@react-app-boilerplate/playwright-config';
 export default defineConfig(playwrightViteConfig());
 `,
 } as const;
+
+// Packages a stub imports directly, installed only when that stub is written.
+const STUB_DEPS: Partial<Record<keyof typeof STUBS, string[]>> = {
+  'vite.config.ts': ['vite', '@vitejs/plugin-react'],
+};
 
 // If any of these files exist, we skip the stub and print a manual instruction.
 const CONFLICT_ALIASES: Record<keyof typeof STUBS, string[]> = {
@@ -83,15 +86,26 @@ const CONFLICT_ALIASES: Record<keyof typeof STUBS, string[]> = {
     '.eslintrc.js',
     '.eslintrc.json',
     '.eslintrc.cjs',
+    '.eslintrc.yml',
+    '.eslintrc.yaml',
   ],
   'tsconfig.app.json': ['tsconfig.app.json'],
   'tsconfig.node.json': ['tsconfig.node.json'],
   'tsconfig.json': ['tsconfig.json'],
-  'vite.config.ts': ['vite.config.ts', 'vite.config.js', 'vite.config.mjs'],
+  'vite.config.ts': [
+    'vite.config.ts',
+    'vite.config.js',
+    'vite.config.mjs',
+    'vite.config.mts',
+    'vite.config.cjs',
+    'vite.config.cts',
+  ],
   'e2e/playwright.config.ts': [
     'e2e/playwright.config.ts',
     'playwright.config.ts',
     'playwright.config.js',
+    'playwright.config.mjs',
+    'playwright.config.mts',
   ],
 };
 
@@ -131,32 +145,27 @@ async function detectPlan(targetDir: string): Promise<Plan> {
   return { toWrite, toSkip, writeComponents };
 }
 
-async function detectMissingPeers(pkgPath: string): Promise<string[]> {
+async function detectMissingPeers(pkgPath: string, plan: Plan): Promise<string[]> {
   const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
   const installed = new Set([
     ...Object.keys(pkg.dependencies ?? {}),
     ...Object.keys(pkg.devDependencies ?? {}),
   ]);
   const missing = new Set<string>();
-  for (const peers of Object.values(PEER_DEPS)) {
-    for (const peer of peers) if (!installed.has(peer)) missing.add(peer);
-  }
+  const wanted = [
+    ...Object.values(PEER_DEPS).flat(),
+    ...plan.toWrite.flatMap((stub) => STUB_DEPS[stub] ?? []),
+  ];
+  for (const dep of wanted) if (!installed.has(dep)) missing.add(dep);
   return [...missing];
 }
 
+// Only the layer barrels: a component copied in without its test, story and
+// the template's theme tokens would render unstyled and break the convention.
 async function copyComponentScaffold(targetDir: string): Promise<void> {
   const dest = join(targetDir, 'src/components');
-  const buttonDest = join(dest, 'atoms/Button');
-  await mkdir(buttonDest, { recursive: true });
-
-  const buttonTsx = await readFile(join(ATOMIC_SCAFFOLD_SRC, 'Button.tsx'), 'utf8');
-  const buttonIndex = await readFile(join(ATOMIC_SCAFFOLD_SRC, 'index.ts'), 'utf8');
-  await writeFile(join(buttonDest, 'Button.tsx'), buttonTsx);
-  await writeFile(join(buttonDest, 'index.ts'), buttonIndex);
-
-  await writeFile(join(dest, 'atoms/index.ts'), `export * from './Button';\n`);
-  const emptyBarrel = `// Empty barrel. Add your components here following the atomic convention.\nexport {};\n`;
-  for (const layer of ['molecules', 'organisms', 'templates']) {
+  const emptyBarrel = `// Add components here following the atomic convention:\n// <Name>/{<Name>.tsx,<Name>.test.tsx,<Name>.stories.tsx,index.ts}\nexport {};\n`;
+  for (const layer of ['atoms', 'molecules', 'organisms', 'templates']) {
     await mkdir(join(dest, layer), { recursive: true });
     await writeFile(join(dest, layer, 'index.ts'), emptyBarrel);
   }
@@ -180,7 +189,6 @@ function printPlan(plan: Plan, missingPeers: string[], packages: string[]): void
   if (plan.writeComponents) {
     console.log(pc.dim('  Will copy atomic scaffold:'));
     console.log(pc.green(`    + src/components/{atoms,molecules,organisms,templates}/index.ts`));
-    console.log(pc.green(`    + src/components/atoms/Button/{Button.tsx,index.ts}`));
   } else {
     console.log(pc.yellow(`    ~ src/components/  (already present, skipping)`));
   }
@@ -245,7 +253,7 @@ export async function runInit(argv: string[]): Promise<void> {
   p.intro(pc.bgCyan(pc.black(' create-atomic-react init ')));
 
   const plan = await detectPlan(targetDir);
-  const missingPeers = await detectMissingPeers(pkgPath);
+  const missingPeers = await detectMissingPeers(pkgPath, plan);
 
   console.log('');
   console.log(pc.bold(`Target: ${targetDir}`));
@@ -279,9 +287,9 @@ export async function runInit(argv: string[]): Promise<void> {
 
   if (args.install) {
     const packages = [...SHARED_PACKAGES, ...missingPeers];
-    spinner.start(`Installing with ${pm} (${packages.length} packages)`);
+    p.log.step(`Installing with ${pm} (${packages.length} packages)`);
     await runAddDev(targetDir, pm, packages);
-    spinner.stop(`${pm} added ${packages.length} package(s).`);
+    p.log.success(`${pm} added ${packages.length} package(s).`);
   }
 
   p.outro(pc.green('init complete.'));

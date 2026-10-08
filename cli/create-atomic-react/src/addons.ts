@@ -23,6 +23,26 @@ async function writeFileEnsuringDir(path: string, contents: string): Promise<voi
   await writeFile(path, contents);
 }
 
+// Adds the atom to src/components/atoms/index.ts so it's importable from
+// '@/components/atoms' like the template's own atoms. Inserted above the
+// example re-export so strip-example's barrel rewrite stays simple.
+export async function registerAtom(targetDir: string, name: string): Promise<void> {
+  const path = resolve(targetDir, 'src/components/atoms/index.ts');
+  let barrel: string;
+  try {
+    barrel = await readFile(path, 'utf8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return;
+    throw err;
+  }
+  const line = `export * from './${name}';\n`;
+  if (barrel.includes(line)) return;
+  const marker = barrel.indexOf('// Delete the following line');
+  const next =
+    marker === -1 ? barrel + line : barrel.slice(0, marker) + line + barrel.slice(marker);
+  await writeFile(path, next);
+}
+
 // Agents read AGENTS.md before touching code, so each addon records how it
 // should be used there instead of leaving the wrapper atom to be discovered.
 export async function appendAgentsNote(targetDir: string, section: string): Promise<void> {
@@ -47,7 +67,9 @@ export async function applyMuiAddon(targetDir: string): Promise<void> {
 
 // Thin wrapper so MUI defaults are set once and the rest of the app imports
 // this file (not @mui/material directly). Swap variant / disableRipple to taste.
-export function MuiButton(props: ButtonProps) {
+export type MuiButtonProps = ButtonProps;
+
+export function MuiButton(props: MuiButtonProps) {
   return <MuiButtonBase variant="contained" disableRipple {...props} />;
 }
 `,
@@ -94,8 +116,9 @@ export const Default: Story = { args: { children: 'Save' } };
 
   await writeFileEnsuringDir(
     resolve(dir, 'index.ts'),
-    `export { MuiButton } from './MuiButton';\n`,
+    `export { MuiButton } from './MuiButton';\nexport type { MuiButtonProps } from './MuiButton';\n`,
   );
+  await registerAtom(targetDir, 'MuiButton');
 
   await appendAgentsNote(
     targetDir,
@@ -117,7 +140,9 @@ export async function applyReactAriaAddon(targetDir: string): Promise<void> {
 
 // react-aria-components ships unstyled, accessibility-first primitives. Wrap
 // them with Tailwind utility classes (or your own) to fit the design system.
-export function AriaButton(props: ButtonProps) {
+export type AriaButtonProps = ButtonProps;
+
+export function AriaButton(props: AriaButtonProps) {
   return (
     <Button
       {...props}
@@ -169,8 +194,9 @@ export const Default: Story = { args: { children: 'Save' } };
 
   await writeFileEnsuringDir(
     resolve(dir, 'index.ts'),
-    `export { AriaButton } from './AriaButton';\n`,
+    `export { AriaButton } from './AriaButton';\nexport type { AriaButtonProps } from './AriaButton';\n`,
   );
+  await registerAtom(targetDir, 'AriaButton');
 
   await appendAgentsNote(
     targetDir,

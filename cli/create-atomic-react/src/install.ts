@@ -3,7 +3,10 @@ import type { PackageManager } from './args.js';
 
 function run(cmd: string, args: string[], cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { cwd, stdio: 'inherit' });
+    // npm/pnpm/yarn are .cmd shims on Windows, which Node only runs through a
+    // shell. Arguments are fixed by this CLI, so the shell can't be injected.
+    const shell = process.platform === 'win32' && cmd !== 'git';
+    const child = spawn(cmd, args, { cwd, stdio: 'inherit', shell });
     child.on('error', reject);
     child.on('exit', (code) => {
       if (code === 0) resolve();

@@ -132,8 +132,8 @@ SSR only:
 
 - `templates/react-ts` (SPA) and `templates/react-ts-ssr` (SSR) are complete, runnable apps. A feature added to one usually needs the equivalent change in the other.
 - `packages/*` are the shared configs published as `@react-app-boilerplate/*`. Templates depend on them via `workspace:*`.
-- `cli/create-atomic-react` embeds both templates at build time (`scripts/sync-template.mjs`), rewriting `workspace:*` to real versions and shipping `.gitignore` as `_gitignore` (npm strips `.gitignore` from tarballs; `copyTemplate` renames it back). The CI `cli-matrix` job scaffolds from the packed tarball across npm / pnpm / yarn × SPA / SSR.
-- `--mui` and `--react-aria` are applied by `cli/create-atomic-react/src/addons.ts` at scaffold time; they are not in the templates.
+- `cli/create-atomic-react` embeds both templates at build time (`scripts/sync-template.mjs`). It copies only git-tracked files (`git add` a new template file before building the CLI), rewrites `workspace:*` to real versions and shipping `.gitignore` as `_gitignore` (npm strips `.gitignore` from tarballs; `copyTemplate` renames it back). The CI `cli-matrix` job scaffolds from the packed tarball across npm / pnpm / yarn × SPA / SSR.
+- `--mui` and `--react-aria` are applied by `cli/create-atomic-react/src/addons.ts` at scaffold time; they are not in the templates. `--pm npm|yarn` rewrites the templates' pnpm commands via `src/pm.ts` - update its rules if you add a new file that calls `pnpm`.
 - Releases go through Changesets: add one with `pnpm changeset` for any change to a published package (the CLI or `packages/*`).
 
 ## Commit + PR style

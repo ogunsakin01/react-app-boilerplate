@@ -35,6 +35,39 @@ function parsePm(pm: unknown): PackageManager | undefined {
   return val as PackageManager;
 }
 
+// yargs-parser accepts any flag, so a typo like `--react-area` would be
+// silently ignored and the user would get a project without the add-on.
+function assertKnownFlags(parsed: Record<string, unknown>, known: readonly string[]): void {
+  const allowed = new Set(['_', '--', ...known]);
+  const kebab = (key: string) => key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+  const keys = Object.keys(parsed).filter((key) => !allowed.has(key));
+  // yargs adds a camelCase copy of every dashed flag; report each typo once.
+  const unknown = keys.filter((key) => key === kebab(key) || !keys.includes(kebab(key)));
+  if (unknown.length > 0) {
+    const flags = unknown.map((key) => (key.length === 1 ? `-${key}` : `--${key}`)).join(', ');
+    throw new Error(
+      `Unknown option${unknown.length > 1 ? 's' : ''}: ${flags}. Run with --help to see all options.`,
+    );
+  }
+}
+
+const SCAFFOLD_FLAGS = [
+  'pm',
+  'yes',
+  'y',
+  'install',
+  'git',
+  'help',
+  'h',
+  'version',
+  'v',
+  'ssr',
+  'mui',
+  'react-aria',
+  'reactAria',
+] as const;
+const INIT_FLAGS = ['pm', 'yes', 'y', 'install', 'help', 'h'] as const;
+
 export function parseArgs(argv: string[]): CliArgs {
   const parsed = yargsParser(argv, {
     string: ['pm'],
@@ -44,6 +77,7 @@ export function parseArgs(argv: string[]): CliArgs {
     configuration: { 'boolean-negation': true, 'camel-case-expansion': true },
   });
 
+  assertKnownFlags(parsed, SCAFFOLD_FLAGS);
   const projectName = parsed._[0] ? String(parsed._[0]) : undefined;
 
   return {
@@ -69,6 +103,7 @@ export function parseInitArgs(argv: string[]): InitArgs {
     configuration: { 'boolean-negation': true },
   });
 
+  assertKnownFlags(parsed, INIT_FLAGS);
   const dir = parsed._[0] ? String(parsed._[0]) : undefined;
 
   return {

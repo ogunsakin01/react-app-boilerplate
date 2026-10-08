@@ -4,7 +4,7 @@ Guidance for AI coding agents (Claude Code, Cursor, Codex, Aider, and similar) w
 
 This variant does **not** use TanStack Router and has no PWA. Never import `@tanstack/react-router` or `virtual:pwa-register` - they aren't installed.
 
-Commands below use `pnpm`. If the project uses npm or yarn, substitute it - the git hooks in `.husky/` also call `pnpm`, so update them too.
+Commands below use `pnpm`. If the project was scaffolded with npm or yarn, substitute it - `create-atomic-react` already adapted the git hooks, CI workflows, the Playwright web server and `netlify.toml`.
 
 ## Component conventions
 

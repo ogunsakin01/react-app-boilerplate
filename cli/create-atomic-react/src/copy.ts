@@ -6,20 +6,25 @@ import type { TemplateVariant } from './args.js';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_ROOT = resolve(HERE, '../templates');
 
+// Matched against whole path segments so files like `distance.ts` survive.
 const SKIP =
-  /(?:node_modules|\.turbo|\.tanstack|coverage|dist|storybook-static|playwright-report|test-results|\.vite|\.tsbuildinfo)/;
+  /(?:^|[\\/])(?:node_modules|\.turbo|\.tanstack|coverage|dist|storybook-static|playwright-report|test-results|\.vite)(?:[\\/]|$)|\.tsbuildinfo$/;
 
 export function templateRoot(variant: TemplateVariant): string {
   return resolve(TEMPLATES_ROOT, variant);
 }
 
+// `overwrite: false` is for scaffolding into an existing folder: files already
+// there (README.md, .vscode/settings.json, ...) are kept.
 export async function copyTemplate(
   targetDir: string,
   variant: TemplateVariant = 'react-ts',
+  { overwrite = true }: { overwrite?: boolean } = {},
 ): Promise<void> {
   const src = templateRoot(variant);
   await cp(src, targetDir, {
     recursive: true,
+    force: overwrite,
     filter: (path) => !SKIP.test(path.slice(src.length)),
   });
   await restoreGitignore(targetDir);
@@ -72,7 +77,6 @@ export async function renameProject(targetDir: string, projectName: string): Pro
   pkg.version = '0.0.0';
   pkg.private = true;
   delete pkg.publishConfig;
-  delete pkg.msw;
 
   await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 }
