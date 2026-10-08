@@ -10,9 +10,10 @@ import {
 } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generateRoutes } from './generate-routes.mjs';
 import { parseArgs } from 'node:util';
 
-function main() {
+async function main() {
   const { values } = parseArgs({
     options: {
       cwd: { type: 'string' },
@@ -32,8 +33,9 @@ Removes the boilerplate's example tour so you can start on your own app:
   - Cleans src/components/{atoms,molecules,organisms,templates}/index.ts barrels
   - Empties src/mocks/handlers.ts
   - Removes VITE_OEMBED_BASE_URL from env schema and .env.example
-  - Rewrites e2e/app.spec.ts to a minimal smoke test
-  - Simplifies MainLayout nav to just the theme toggle + repo link
+  - Replaces e2e/app.spec.ts with e2e/smoke.spec.ts and trims e2e/a11y.spec.ts to /
+  - Simplifies MainLayout nav to just the theme toggle, and rewrites its test
+  - Regenerates src/routeTree.gen.ts
 
 Options:
       --cwd <path>   Run against this directory (default: cwd)
@@ -56,9 +58,34 @@ Options:
     if (!dryRun) action.apply();
   }
 
+  // The deleted routes are still listed in routeTree.gen.ts until it's rebuilt.
+  if (!dryRun) {
+    try {
+      await generateRoutes(root);
+      console.log('  regenerate   src/routeTree.gen.ts');
+    } catch {
+      console.log('  (run `pnpm generate:routes` to refresh src/routeTree.gen.ts)');
+    }
+  }
+
   console.log(
     `strip-example: ${actions.length} change${actions.length === 1 ? '' : 's'}${dryRun ? ' (dry-run)' : ''}`,
   );
+}
+
+// Rewrites are skipped when the file already has the target content, so a
+// second run reports "nothing to do".
+function differs(file, content) {
+  return !existsSync(file) || readFileSync(file, 'utf8') !== content;
+}
+
+// Plans an in-place edit only when it would change the file.
+function patch(actions, root, rel, transform) {
+  const file = join(root, rel);
+  if (!existsSync(file)) return;
+  const next = transform(readFileSync(file, 'utf8'));
+  if (!differs(file, next)) return;
+  actions.push({ kind: 'patch', path: rel, apply: () => writeFileSync(file, next) });
 }
 
 export function collectActions(root) {
@@ -92,21 +119,24 @@ export function collectActions(root) {
     });
   }
 
-  actions.push({
-    kind: 'write',
-    path: 'src/pages/Home/',
-    apply: () => {
-      const dir = join(root, 'src', 'pages', 'Home');
-      mkdirSync(dir, { recursive: true });
-      writeFileSync(join(dir, 'Home.tsx'), HOME_TSX);
-      writeFileSync(join(dir, 'Home.test.tsx'), HOME_TEST_TSX);
-      writeFileSync(join(dir, 'Home.stories.tsx'), HOME_STORIES_TSX);
-      writeFileSync(join(dir, 'index.ts'), "export { Home } from './Home';\n");
-    },
-  });
+  // Never replace a Home page that already exists - it may have been edited.
+  if (!existsSync(join(root, 'src', 'pages', 'Home'))) {
+    actions.push({
+      kind: 'write',
+      path: 'src/pages/Home/',
+      apply: () => {
+        const dir = join(root, 'src', 'pages', 'Home');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, 'Home.tsx'), HOME_TSX);
+        writeFileSync(join(dir, 'Home.test.tsx'), HOME_TEST_TSX);
+        writeFileSync(join(dir, 'Home.stories.tsx'), HOME_STORIES_TSX);
+        writeFileSync(join(dir, 'index.ts'), "export { Home } from './Home';\n");
+      },
+    });
+  }
 
   const indexRoute = join(root, 'src', 'routes', 'index.tsx');
-  if (existsSync(indexRoute)) {
+  if (existsSync(indexRoute) && differs(indexRoute, INDEX_ROUTE_TSX)) {
     actions.push({
       kind: 'rewrite',
       path: 'src/routes/index.tsx',
@@ -115,7 +145,7 @@ export function collectActions(root) {
   }
 
   const handlers = join(root, 'src', 'mocks', 'handlers.ts');
-  if (existsSync(handlers)) {
+  if (existsSync(handlers) && differs(handlers, HANDLERS_TS)) {
     actions.push({
       kind: 'rewrite',
       path: 'src/mocks/handlers.ts',
@@ -123,59 +153,37 @@ export function collectActions(root) {
     });
   }
 
-  const envTs = join(root, 'src', 'lib', 'env.ts');
-  if (existsSync(envTs)) {
-    actions.push({
-      kind: 'patch',
-      path: 'src/lib/env.ts',
-      apply: () => {
-        const cleaned = readFileSync(envTs, 'utf8')
-          .split('\n')
-          .filter(
-            (line) =>
-              !line.includes('VITE_OEMBED_BASE_URL') && !/EXAMPLE.*used by the \/watch/i.test(line),
-          )
-          .join('\n');
-        writeFileSync(envTs, cleaned);
-      },
-    });
-  }
+  const dropLines = (predicate) => (text) =>
+    text
+      .split('\n')
+      .filter((line) => !predicate(line))
+      .join('\n');
 
-  const envExample = join(root, '.env.example');
-  if (existsSync(envExample)) {
-    actions.push({
-      kind: 'patch',
-      path: '.env.example',
-      apply: () => {
-        const cleaned = readFileSync(envExample, 'utf8')
-          .split('\n')
-          .filter((line) => !line.includes('VITE_OEMBED_BASE_URL'))
-          .join('\n');
-        writeFileSync(envExample, cleaned);
-      },
-    });
-  }
-
+  patch(
+    actions,
+    root,
+    'src/lib/env.ts',
+    dropLines(
+      (line) => line.includes('VITE_OEMBED_BASE_URL') || /EXAMPLE.*used by the \/watch/i.test(line),
+    ),
+  );
+  patch(
+    actions,
+    root,
+    '.env.example',
+    dropLines((line) => line.includes('VITE_OEMBED_BASE_URL')),
+  );
   for (const layer of ['atoms', 'molecules', 'organisms', 'templates']) {
-    const p = join(root, 'src', 'components', layer, 'index.ts');
-    if (!existsSync(p)) continue;
-    actions.push({
-      kind: 'patch',
-      path: `src/components/${layer}/index.ts`,
-      apply: () => {
-        const cleaned = readFileSync(p, 'utf8')
-          .split('\n')
-          .filter(
-            (line) => !line.includes("'./example'") && !line.includes('// Delete the following'),
-          )
-          .join('\n');
-        writeFileSync(p, cleaned);
-      },
-    });
+    patch(
+      actions,
+      root,
+      `src/components/${layer}/index.ts`,
+      dropLines((line) => line.includes("'./example'") || line.includes('// Delete the following')),
+    );
   }
 
   const mainLayout = join(root, 'src', 'components', 'templates', 'MainLayout', 'MainLayout.tsx');
-  if (existsSync(mainLayout)) {
+  if (existsSync(mainLayout) && differs(mainLayout, MAIN_LAYOUT_TSX)) {
     actions.push({
       kind: 'rewrite',
       path: 'src/components/templates/MainLayout/MainLayout.tsx',
@@ -183,14 +191,41 @@ export function collectActions(root) {
     });
   }
 
-  actions.push({
-    kind: 'write',
-    path: 'e2e/smoke.spec.ts',
-    apply: () => {
-      mkdirSync(join(root, 'e2e'), { recursive: true });
-      writeFileSync(join(root, 'e2e', 'smoke.spec.ts'), SMOKE_SPEC_TS);
-    },
-  });
+  const mainLayoutTest = join(
+    root,
+    'src',
+    'components',
+    'templates',
+    'MainLayout',
+    'MainLayout.test.tsx',
+  );
+  if (existsSync(mainLayoutTest) && differs(mainLayoutTest, MAIN_LAYOUT_TEST_TSX)) {
+    actions.push({
+      kind: 'rewrite',
+      path: 'src/components/templates/MainLayout/MainLayout.test.tsx',
+      apply: () => writeFileSync(mainLayoutTest, MAIN_LAYOUT_TEST_TSX),
+    });
+  }
+
+  const a11ySpec = join(root, 'e2e', 'a11y.spec.ts');
+  if (existsSync(a11ySpec) && differs(a11ySpec, A11Y_SPEC_TS)) {
+    actions.push({
+      kind: 'rewrite',
+      path: 'e2e/a11y.spec.ts',
+      apply: () => writeFileSync(a11ySpec, A11Y_SPEC_TS),
+    });
+  }
+
+  if (differs(join(root, 'e2e', 'smoke.spec.ts'), SMOKE_SPEC_TS)) {
+    actions.push({
+      kind: 'write',
+      path: 'e2e/smoke.spec.ts',
+      apply: () => {
+        mkdirSync(join(root, 'e2e'), { recursive: true });
+        writeFileSync(join(root, 'e2e', 'smoke.spec.ts'), SMOKE_SPEC_TS);
+      },
+    });
+  }
 
   return actions;
 }
@@ -221,11 +256,12 @@ function findExampleDirs(startDir) {
 }
 
 const HOME_TSX = `import { Seo } from '@/components/atoms/Seo';
+import { env } from '@/lib/env';
 
 export function Home() {
   return (
     <section className="flex flex-col gap-4">
-      <Seo title="Home" description="Your new React app." />
+      <Seo title="Home" siteName={env.VITE_APP_TITLE} description="Your new React app." />
       <h1 className="text-3xl font-semibold tracking-tight">Your app starts here</h1>
       <p className="text-muted">
         Replace this page with your own content. Scaffold new components and pages with{' '}
@@ -244,7 +280,9 @@ import { Home } from './Home';
 describe('Home', () => {
   it('renders the page heading', () => {
     render(<Home />);
-    expect(screen.getByRole('heading', { level: 1, name: /your app starts here/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /your app starts here/i }),
+    ).toBeInTheDocument();
   });
 
   it('has no accessibility violations', async () => {
@@ -325,6 +363,85 @@ export function MainLayout({ children }: { children: ReactNode }) {
 }
 `;
 
+const MAIN_LAYOUT_TEST_TSX = `import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { axe } from 'jest-axe';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    to,
+    children,
+    ...rest
+  }: React.PropsWithChildren<{ to: string } & Record<string, unknown>>) => (
+    <a href={to} {...rest}>
+      {children}
+    </a>
+  ),
+}));
+
+vi.mock('virtual:pwa-register/react', () => ({
+  useRegisterSW: () => ({
+    needRefresh: [false, vi.fn()],
+    offlineReady: [false, vi.fn()],
+    updateServiceWorker: vi.fn(),
+  }),
+}));
+
+import { ThemeProvider } from '@/providers/ThemeProvider';
+import { MainLayout } from './MainLayout';
+
+function renderLayout() {
+  return render(
+    <ThemeProvider>
+      <MainLayout>
+        <p>page body</p>
+      </MainLayout>
+    </ThemeProvider>,
+  );
+}
+
+describe('MainLayout', () => {
+  it('renders the primary nav and children', () => {
+    renderLayout();
+    expect(screen.getByRole('navigation', { name: /primary/i })).toBeInTheDocument();
+    expect(screen.getByText('page body')).toBeInTheDocument();
+  });
+
+  it('toggles the theme via the header button', async () => {
+    const user = userEvent.setup();
+    renderLayout();
+
+    await user.click(screen.getByRole('button', { name: /switch to dark theme/i }));
+
+    expect(screen.getByRole('button', { name: /switch to light theme/i })).toBeInTheDocument();
+    expect(document.documentElement.dataset.theme).toBe('dark');
+  });
+
+  it('has no accessibility violations', async () => {
+    const { container } = renderLayout();
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+`;
+
+const A11Y_SPEC_TS = `import AxeBuilder from '@axe-core/playwright';
+import { expect, test } from '@playwright/test';
+
+// Add each new route here so it gets the same WCAG scan.
+const routes: { name: string; path: string }[] = [{ name: 'home', path: '/' }];
+
+for (const { name, path } of routes) {
+  test(\`\${name} has no detectable accessibility violations\`, async ({ page }) => {
+    await page.goto(path);
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+}
+`;
+
 const SMOKE_SPEC_TS = `import { expect, test } from '@playwright/test';
 
 test('home page renders', async ({ page }) => {
@@ -334,4 +451,4 @@ test('home page renders', async ({ page }) => {
 `;
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
-if (isMain) main();
+if (isMain) await main();
