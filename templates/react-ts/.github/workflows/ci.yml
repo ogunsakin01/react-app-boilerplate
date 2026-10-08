@@ -1,6 +1,5 @@
-# CI for the scaffolded project. Uses pnpm by default.
-# If you scaffolded with npm or yarn, replace `pnpm` and the pnpm/action-setup
-# step with your package manager's equivalent.
+# CI for the scaffolded project. create-atomic-react rewrites the pnpm steps
+# when you scaffold with --pm npm or --pm yarn.
 name: CI
 
 on:
@@ -13,6 +12,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     name: lint / typecheck / test / build
@@ -23,6 +25,8 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Setup Node
         uses: actions/setup-node@v4

@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   scaffold:
     name: scaffold (${{ matrix.pm }}, ${{ matrix.variant }})
@@ -81,7 +84,10 @@ jobs:
               for (const name of Object.keys(deps)) {
                 if (name.startsWith("@react-app-boilerplate/")) {
                   const short = name.replace("@react-app-boilerplate/", "react-app-boilerplate-");
-                  deps[name] = `file:${process.env.TARBALL_DIR}/${short}-0.1.0.tgz`;
+                  const tgz = fs.readdirSync(process.env.TARBALL_DIR)
+                    .find((f) => f.startsWith(`${short}-`) && f.endsWith(".tgz"));
+                  if (!tgz) throw new Error(`No tarball for ${name} in ${process.env.TARBALL_DIR}`);
+                  deps[name] = `file:${process.env.TARBALL_DIR}/${tgz}`;
                 }
               }
             }
