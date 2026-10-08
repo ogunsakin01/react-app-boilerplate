@@ -5,7 +5,7 @@ description: Enable, disable, or tune Sentry error tracking + performance monito
 
 # configure-sentry
 
-Sentry is wired via `@sentry/react`. Initialization lives in `src/lib/sentry.ts` and runs once from `src/main.tsx` before the React tree mounts. It is a no-op unless `VITE_SENTRY_DSN` is set.
+Sentry is wired via `@sentry/react`. Initialization lives in `src/lib/sentry.ts` and runs once in the browser from `pages/+client.ts`, before Vike hydrates the page. It never runs during prerender. It is a no-op unless `VITE_SENTRY_DSN` is set.
 
 ## Enable Sentry
 
@@ -25,18 +25,30 @@ The env schema in `src/lib/env.ts` already validates all three fields.
 
 The init helper sets `enabled: !import.meta.env.DEV`, so Sentry is inert in `pnpm dev` even if a DSN is present. Flip that flag in `src/lib/sentry.ts` if you want to test capture locally.
 
-## Wrap route errors
+## Capture render errors
 
-Wire Sentry into TanStack Router's error boundary by importing `Sentry` from `@/lib/sentry` in `src/routes/__root.tsx`:
+Vike renders `pages/_error/+Page.tsx` when a page throws (and for 404s). Report real errors from there - skip 404s, which aren't bugs:
 
 ```tsx
+// pages/_error/+Page.tsx
+import { useEffect } from 'react';
+import { usePageContext } from 'vike-react/usePageContext';
 import { Sentry } from '@/lib/sentry';
+import { NotFound } from '@/pages/NotFound';
 
-function ErrorComponent({ error }: { error: Error }) {
-  Sentry.captureException(error);
-  return <div role="alert">Something went wrong: {error.message}</div>;
+export default function Page() {
+  const { is404, abortReason } = usePageContext();
+
+  useEffect(() => {
+    if (!is404) Sentry.captureException(abortReason ?? new Error('Render error'));
+  }, [is404, abortReason]);
+
+  if (is404) return <NotFound />;
+  return <div role="alert">Something went wrong.</div>;
 }
 ```
+
+Errors thrown during `pnpm build` (prerender) fail the build instead - Sentry isn't involved there.
 
 ## Add Session Replay (optional)
 

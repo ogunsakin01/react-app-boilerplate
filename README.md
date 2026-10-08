@@ -55,7 +55,7 @@ Located at `.claude/skills/` in the scaffolded project. Claude Code auto-discove
 - **`add-msw-handler`** - Add a mocked HTTP endpoint to `src/mocks/handlers.ts` so it's picked up by Vitest, Storybook, dev, and Playwright.
 - **`add-env-var`** - Add a typed environment variable. Extends the zod schema, `.env.example`, and inferred types in one go.
 - **`add-seo`** - Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page via the `<Seo>` atom.
-- **`configure-pwa`** - Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
+- **`configure-pwa`** (SPA only) - Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
 - **`configure-sentry`** - Enable Sentry (DSN), tune sample rates, wire route errors, add replay, upload source maps.
 - **`configure-deploy`** - Ship `dist/` to S3 / R2 / Spaces / MinIO, invalidate CloudFront, set CDN base URL.
 

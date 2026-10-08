@@ -9,8 +9,10 @@ Edit `src/mocks/handlers.ts` - the single source of truth. The same file feeds:
 
 - **Vitest** via `src/mocks/server.ts` (started in `src/test/setup.ts`)
 - **Storybook** via `.storybook/preview.tsx` loader (starts the browser worker)
-- **Dev browser** via `src/main.tsx` (starts the worker in `import.meta.env.DEV`)
+- **Dev browser** via `pages/+client.ts` (starts the worker in `import.meta.env.DEV`)
 - **Playwright e2e** via the running dev server's worker
+
+MSW never runs during `pnpm build`. Pages are prerendered without mocks, and data is fetched in the browser after hydration, so a page whose content depends on a mocked endpoint prerenders its loading state.
 
 ## Add a GET
 
