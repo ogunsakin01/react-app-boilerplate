@@ -82,7 +82,7 @@ Do NOT install `react-helmet-async`, and don't render `<title>` / `<meta>` from 
 - Sitemap: `scripts/generate-sitemap.mjs` runs as part of `pnpm build` and writes `sitemap.xml` derived from `pages/`. Set `VITE_SITE_URL` in the shell environment for the build, otherwise URLs default to `https://example.com`. Folders starting with `_` are skipped. Robots at `public/robots.txt`.
 - Sentry: init helper at `src/lib/sentry.ts`, called from `pages/+client.ts`. No-op unless `VITE_SENTRY_DSN` is set, and always inert in dev (`enabled: !import.meta.env.DEV`). To capture render errors, import `Sentry` from `@/lib/sentry` and call `Sentry.captureException(error)` from `pages/_error/+Page.tsx`.
 - Build output: `pnpm build` writes the static site to `dist/client/` (one `.html` per route).
-- Deploy: `pnpm deploy --dist dist/client` shells out to `aws s3 sync --delete` - needs the AWS CLI on PATH. Pass `--dist dist/client`; the default `dist` uploads the wrong folder. Root entry files (`index.html`, `robots.txt`, `sitemap.xml`) get `max-age=0,must-revalidate`, but nested route HTML (`docs/index.html`, …) currently falls into the `max-age=31536000,immutable` tier - fix the excludes in `scripts/deploy.mjs` before relying on it. For S3-compatible providers, pass `--endpoint <url>` or set `DEPLOY_ENDPOINT`. Netlify (`netlify.toml`) and Vercel (`vercel.json`) configs are included.
+- Deploy: `pnpm deploy` uploads `dist/client/` with `aws s3 sync` - needs the AWS CLI on PATH. Hashed files under `assets/` get `max-age=31536000,immutable` and are uploaded first; everything else (HTML at every depth, `robots.txt`, `sitemap.xml`, favicon, service workers) gets `max-age=0,must-revalidate`. Old assets are kept so open tabs can still lazy-load their chunks - pass `--prune-assets` to delete them. `--cloudfront-id` invalidates `/*`. For S3-compatible providers, pass `--endpoint <url>` or set `DEPLOY_ENDPOINT`. Netlify (`netlify.toml`) and Vercel (`vercel.json`) configs are included.
 - Shared configs: ESLint, tsconfig, Vitest and Playwright extend the `@react-app-boilerplate/*` packages. Override locally in the project's own config files rather than forking the packages.
 - Task skills for Claude Code: `.claude/skills/`. Where a skill disagrees with this file, follow this file.
 
@@ -98,21 +98,21 @@ Every example file starts with `// EXAMPLE - safe to delete` and lives under `sr
 
 ## Common tasks
 
-| Task                      | Command                          |
-| ------------------------- | -------------------------------- |
-| Dev (Vite + Storybook)    | `pnpm dev`                       |
-| Just the app              | `pnpm dev:app`                   |
-| Just Storybook            | `pnpm storybook`                 |
-| Unit tests                | `pnpm test`                      |
-| Coverage                  | `pnpm test:coverage`             |
-| E2E                       | `pnpm e2e`                       |
-| Generate a component/page | `pnpm generate`                  |
-| Remove the demo code      | `pnpm strip-example`             |
-| Lint                      | `pnpm lint`                      |
-| Type check                | `pnpm typecheck`                 |
-| Build (prerender)         | `pnpm build`                     |
-| Preview the build         | `pnpm preview`                   |
-| Deploy to S3-compatible   | `pnpm deploy --dist dist/client` |
+| Task                      | Command              |
+| ------------------------- | -------------------- |
+| Dev (Vite + Storybook)    | `pnpm dev`           |
+| Just the app              | `pnpm dev:app`       |
+| Just Storybook            | `pnpm storybook`     |
+| Unit tests                | `pnpm test`          |
+| Coverage                  | `pnpm test:coverage` |
+| E2E                       | `pnpm e2e`           |
+| Generate a component/page | `pnpm generate`      |
+| Remove the demo code      | `pnpm strip-example` |
+| Lint                      | `pnpm lint`          |
+| Type check                | `pnpm typecheck`     |
+| Build (prerender)         | `pnpm build`         |
+| Preview the build         | `pnpm preview`       |
+| Deploy to S3-compatible   | `pnpm deploy`        |
 
 ## What to avoid
 

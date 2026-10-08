@@ -21,12 +21,14 @@ DEPLOY_BUCKET=my-app-prod pnpm deploy
 
 Uploads `dist/` to `s3://my-app-prod/` with two cache policies:
 
-| files                                                                      | cache-control                       |
-| -------------------------------------------------------------------------- | ----------------------------------- |
-| hashed assets (JS/CSS with `-<hash>.` filenames)                           | `public,max-age=31536000,immutable` |
-| `index.html`, `sw.js`, `manifest.webmanifest`, `robots.txt`, `sitemap.xml` | `public,max-age=0,must-revalidate`  |
+| files                                                                               | cache-control                       |
+| ----------------------------------------------------------------------------------- | ----------------------------------- |
+| `assets/*` (Vite's content-hashed JS/CSS/images), uploaded first                    | `public,max-age=31536000,immutable` |
+| everything else: HTML, `robots.txt`, `sitemap.xml`, favicon, `sw.js`, manifest, ... | `public,max-age=0,must-revalidate`  |
 
-The `--delete` flag removes files from the bucket that are no longer in `dist/` (safe: hashed filenames mean no in-flight page can reference them).
+Only content-hashed files are safe to cache forever - a changed favicon or `robots.txt` keeps its name, so it must revalidate.
+
+`--delete` applies to everything **except** `assets/`: pages you removed disappear, but old hashed chunks stay. A tab still running the previous release lazy-loads chunks by their old names, and deleting them would break its next navigation. Old assets accumulate; pass `--prune-assets` occasionally (or add a bucket lifecycle rule) to clean them up.
 
 ## S3-compatible providers
 
@@ -53,7 +55,7 @@ Credentials still come from the standard AWS chain (`AWS_ACCESS_KEY_ID` / `AWS_S
 
 ## CloudFront invalidation
 
-Append `--cloudfront-id <id>` (or set `DEPLOY_CLOUDFRONT_ID`) to invalidate the entry-point files after upload:
+Append `--cloudfront-id <id>` (or set `DEPLOY_CLOUDFRONT_ID`) to invalidate the distribution after upload:
 
 ```bash
 DEPLOY_BUCKET=my-app-prod \
@@ -61,7 +63,7 @@ DEPLOY_CLOUDFRONT_ID=E1234567890 \
 pnpm deploy
 ```
 
-Only entry-point files are invalidated (index.html, sw.js, manifest.webmanifest, robots.txt, sitemap.xml). Hashed assets never need invalidation because their filenames change per build.
+The script invalidates `/*`, which CloudFront bills as a single path. Hashed assets are unaffected in practice: their names change every build, so the new HTML never asks for a cached old copy.
 
 ## Serve from a CDN prefix
 
@@ -83,14 +85,15 @@ Prints every `aws` command without executing anything. Use to verify the config 
 
 ## All flags
 
-| flag               | env var                | notes                           |
-| ------------------ | ---------------------- | ------------------------------- |
-| `--bucket`, `-b`   | `DEPLOY_BUCKET`        | required                        |
-| `--dist`, `-d`     | -                      | default: `dist`                 |
-| `--endpoint`, `-e` | `DEPLOY_ENDPOINT`      | for R2/Spaces/MinIO             |
-| `--region`, `-r`   | `AWS_REGION`           | standard AWS region             |
-| `--cloudfront-id`  | `DEPLOY_CLOUDFRONT_ID` | invalidate after upload         |
-| `--dry-run`        | -                      | preview commands, don't execute |
+| flag               | env var                | notes                             |
+| ------------------ | ---------------------- | --------------------------------- |
+| `--bucket`, `-b`   | `DEPLOY_BUCKET`        | required                          |
+| `--dist`, `-d`     | -                      | default: `dist`                   |
+| `--endpoint`, `-e` | `DEPLOY_ENDPOINT`      | for R2/Spaces/MinIO               |
+| `--region`, `-r`   | `AWS_REGION`           | standard AWS region               |
+| `--cloudfront-id`  | `DEPLOY_CLOUDFRONT_ID` | invalidate after upload           |
+| `--prune-assets`   | -                      | also delete stale `assets/` files |
+| `--dry-run`        | -                      | preview commands, don't execute   |
 
 ## Managed hosts (zero-config)
 

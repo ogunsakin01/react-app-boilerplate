@@ -27,33 +27,19 @@ No SPA fallback rewrite is needed - every route is a real file.
 Prerequisites: the **AWS CLI** on PATH (`aws --version`), credentials via the standard chain (env vars, `~/.aws/credentials`, IAM role, or SSO), and a fresh `pnpm build`.
 
 ```bash
-DEPLOY_BUCKET=my-site-prod pnpm deploy --dist dist/client
+DEPLOY_BUCKET=my-site-prod pnpm deploy
 ```
 
-Always pass `--dist dist/client` - the script's default (`dist`) uploads the wrong folder and the site root 404s.
+It uploads `dist/client/` by default with two cache tiers:
 
-### Known limitation: nested HTML gets a one-year cache
+| files                                                                                  | cache-control                       |
+| -------------------------------------------------------------------------------------- | ----------------------------------- |
+| `assets/*` (Vite's content-hashed JS/CSS/images), uploaded first                       | `public,max-age=31536000,immutable` |
+| everything else: HTML, `robots.txt`, `sitemap.xml`, favicon, `*.pageContext.json`, ... | `public,max-age=0,must-revalidate`  |
 
-The script was written for a single-`index.html` SPA. It uploads everything with `public,max-age=31536000,immutable` **except** root-level `index.html`, `robots.txt`, `sitemap.xml` (plus `sw.js` and `manifest.webmanifest`, which this variant doesn't produce). That means `docs/index.html`, `404.html` and `*.pageContext.json` are cached as immutable, and visitors keep seeing old pages after a redeploy.
+Only content-hashed files are safe to cache forever - a changed favicon or `robots.txt` keeps its name, so it must revalidate.
 
-Before using `pnpm deploy` in production, change both `aws s3 sync` calls in `scripts/deploy.mjs` so all HTML and page-context files revalidate:
-
-```js
-// first sync (immutable tier): exclude every HTML + pageContext file
-'--exclude', '*.html',
-'--exclude', '*.pageContext.json',
-'--exclude', 'robots.txt',
-'--exclude', 'sitemap.xml',
-
-// second sync (max-age=0,must-revalidate tier): include the same set
-'--exclude', '*',
-'--include', '*.html',
-'--include', '*.pageContext.json',
-'--include', 'robots.txt',
-'--include', 'sitemap.xml',
-```
-
-…and invalidate `/*` (or every route path) instead of the hard-coded root files in the CloudFront step. Update `src/test/deploy.test.ts` to match, and change the `dist` default to `dist/client` while you're there.
+`--delete` applies to everything **except** `assets/`: pages you removed disappear, but old hashed chunks stay. A tab still running the previous release lazy-loads chunks by their old names, and deleting them would break its next navigation. Old assets accumulate; pass `--prune-assets` occasionally (or add a bucket lifecycle rule) to clean them up.
 
 ### S3-compatible providers
 
@@ -63,12 +49,12 @@ Any provider with an S3-compatible API works via `--endpoint` (or `DEPLOY_ENDPOI
 # Cloudflare R2
 DEPLOY_BUCKET=my-site \
 DEPLOY_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com \
-pnpm deploy --dist dist/client
+pnpm deploy
 
 # DigitalOcean Spaces
 DEPLOY_BUCKET=my-site \
 DEPLOY_ENDPOINT=https://<region>.digitaloceanspaces.com \
-pnpm deploy --dist dist/client
+pnpm deploy
 ```
 
 Credentials still come from the standard AWS chain (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` work for all providers).
@@ -77,12 +63,12 @@ For a bucket website endpoint, set the index document to `index.html` and the er
 
 ### CloudFront
 
-Append `--cloudfront-id <id>` (or set `DEPLOY_CLOUDFRONT_ID`) to create an invalidation after upload. Note the limitation above - by default only root-level entry files are invalidated. CloudFront doesn't map `/docs` to `docs/index.html` on its own; use a CloudFront Function or the S3 website endpoint as the origin.
+Append `--cloudfront-id <id>` (or set `DEPLOY_CLOUDFRONT_ID`) to invalidate `/*` after upload. CloudFront doesn't map `/docs` to `docs/index.html` on its own; use a CloudFront Function or the S3 website endpoint as the origin.
 
 ### Dry run
 
 ```bash
-pnpm deploy --bucket my-site --dist dist/client --dry-run
+pnpm deploy --bucket my-site --dry-run
 ```
 
 Prints every `aws` command without executing anything.
