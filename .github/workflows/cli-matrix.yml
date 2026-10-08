@@ -89,9 +89,11 @@ jobs:
           '
           echo "dir=$SCAFFOLD_ROOT/my-app" >> "$GITHUB_OUTPUT"
 
-      - name: Verify .gitignore
+      - name: Verify .gitignore + agent docs
         working-directory: ${{ steps.scaffold.outputs.dir }}
         run: |
+          test -f AGENTS.md
+          grep -q '^@AGENTS.md$' CLAUDE.md
           test -f .gitignore
           test ! -e _gitignore
           git init -q

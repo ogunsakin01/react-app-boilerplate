@@ -23,6 +23,20 @@ async function writeFileEnsuringDir(path: string, contents: string): Promise<voi
   await writeFile(path, contents);
 }
 
+// Agents read AGENTS.md before touching code, so each addon records how it
+// should be used there instead of leaving the wrapper atom to be discovered.
+export async function appendAgentsNote(targetDir: string, section: string): Promise<void> {
+  const path = resolve(targetDir, 'AGENTS.md');
+  let existing: string;
+  try {
+    existing = await readFile(path, 'utf8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return;
+    throw err;
+  }
+  await writeFile(path, `${existing.trimEnd()}\n\n${section.trim()}\n`);
+}
+
 export async function applyMuiAddon(targetDir: string): Promise<void> {
   await addDeps(targetDir, MUI_DEPS);
 
@@ -81,6 +95,15 @@ export const Default: Story = { args: { children: 'Save' } };
   await writeFileEnsuringDir(
     resolve(dir, 'index.ts'),
     `export { MuiButton } from './MuiButton';\n`,
+  );
+
+  await appendAgentsNote(
+    targetDir,
+    `## Material UI (added by --mui)
+
+- \`@mui/material\` + emotion are installed. Import MUI through wrapper atoms like \`src/components/atoms/MuiButton/\`, never from \`@mui/material\` directly in molecules, organisms or pages - set MUI defaults once in the wrapper.
+- New MUI wrappers follow the same four-file convention (component, axe test, story, barrel).
+- Tailwind still owns layout and spacing; use MUI for the component itself.`,
   );
 }
 
@@ -147,5 +170,14 @@ export const Default: Story = { args: { children: 'Save' } };
   await writeFileEnsuringDir(
     resolve(dir, 'index.ts'),
     `export { AriaButton } from './AriaButton';\n`,
+  );
+
+  await appendAgentsNote(
+    targetDir,
+    `## React Aria Components (added by --react-aria)
+
+- \`react-aria-components\` is installed. Its primitives are unstyled and handle keyboard, focus and ARIA behaviour - wrap them in atoms styled with Tailwind, like \`src/components/atoms/AriaButton/\`.
+- Style interaction states with React Aria's data attributes (\`data-[focus-visible]\`, \`data-[pressed]\`, \`data-[disabled]\`), not \`:focus\` / \`:active\`.
+- New wrappers follow the same four-file convention (component, axe test, story, barrel).`,
   );
 }
