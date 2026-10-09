@@ -30,11 +30,13 @@ The init helper sets `enabled: !import.meta.env.DEV`, so Sentry is inert in `pnp
 Wire Sentry into TanStack Router's error boundary by importing `Sentry` from `@/lib/sentry` in `src/routes/__root.tsx`:
 
 ```tsx
+import type { ErrorComponentProps } from '@tanstack/react-router';
 import { Sentry } from '@/lib/sentry';
 
-function ErrorComponent({ error }: { error: Error }) {
+function ErrorComponent({ error }: ErrorComponentProps) {
   Sentry.captureException(error);
-  return <div role="alert">Something went wrong: {error.message}</div>;
+  const message = error instanceof Error ? error.message : String(error);
+  return <div role="alert">Something went wrong: {message}</div>;
 }
 ```
 
