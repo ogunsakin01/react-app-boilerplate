@@ -7,5 +7,8 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@react-app-boilerplate/template-react-ts"]
+  "ignore": [
+    "@react-app-boilerplate/template-react-ts",
+    "@react-app-boilerplate/template-react-ts-ssr"
+  ]
 }

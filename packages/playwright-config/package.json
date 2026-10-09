@@ -31,7 +31,10 @@
     "playwright",
     "playwright-config",
     "e2e",
-    "testing"
+    "testing",
+    "shareable-config",
+    "react-app-boilerplate",
+    "create-atomic-react"
   ],
   "peerDependencies": {
     "@playwright/test": "^1.49.0"

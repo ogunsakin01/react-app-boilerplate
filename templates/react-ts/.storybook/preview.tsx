@@ -46,8 +46,11 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    // 'error' marks violations as failures in the a11y panel. CI enforcement
+    // comes from the jest-axe assertion in every unit test; add
+    // @storybook/addon-vitest to also fail CI on story-level violations.
     a11y: {
-      test: 'todo',
+      test: 'error',
     },
   },
   loaders: [

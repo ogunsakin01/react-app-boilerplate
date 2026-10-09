@@ -6,6 +6,9 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   scheduled:
     name: lint / typecheck / test / build (weekly)
@@ -25,6 +28,11 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # The lockfile pins everything, so without this the weekly run would
+      # never see a new in-range release break the build.
+      - name: Update to latest in-range versions
+        run: pnpm update -r
 
       - name: Lint
         run: pnpm lint

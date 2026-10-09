@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const SCRIPT = join(process.cwd(), 'scripts', 'deploy.mjs');
+const DIST = 'dist/client';
 
 function run(cwd: string, args: string[], extraEnv: Record<string, string> = {}) {
   return spawnSync(process.execPath, [SCRIPT, ...args], {
@@ -25,9 +26,9 @@ describe('scripts/deploy.mjs', () => {
 
   beforeEach(() => {
     tmp = mkdtempSync(join(tmpdir(), 'deploy-test-'));
-    mkdirSync(join(tmp, 'dist'));
-    writeFileSync(join(tmp, 'dist', 'index.html'), '<!doctype html>');
-    writeFileSync(join(tmp, 'dist', 'sw.js'), '// sw');
+    mkdirSync(join(tmp, DIST, 'assets'), { recursive: true });
+    writeFileSync(join(tmp, DIST, 'index.html'), '<!doctype html>');
+    writeFileSync(join(tmp, DIST, 'assets', 'index-abc123.js'), '// app');
   });
 
   afterEach(() => rmSync(tmp, { recursive: true, force: true }));
@@ -46,20 +47,38 @@ describe('scripts/deploy.mjs', () => {
   });
 
   it('fails when the dist directory does not exist', () => {
-    rmSync(join(tmp, 'dist'), { recursive: true });
+    rmSync(join(tmp, DIST), { recursive: true });
     const res = run(tmp, ['--bucket', 'my-bucket', '--dry-run']);
     expect(res.status).not.toBe(0);
     expect(res.stderr).toMatch(/dist directory not found/);
   });
 
-  it('prints the aws sync commands in dry-run mode without invoking aws', () => {
+  it('caches only assets/ as immutable and revalidates everything else', () => {
     const res = run(tmp, ['--bucket', 'my-bucket', '--dry-run']);
     expect(res.status).toBe(0);
-    expect(res.stdout).toMatch(/aws s3 sync .* s3:\/\/my-bucket --delete/);
-    expect(res.stdout).toMatch(/--cache-control public,max-age=31536000,immutable/);
-    expect(res.stdout).toMatch(/--exclude index\.html/);
-    expect(res.stdout).toMatch(/--include index\.html/);
+    const [assets, entries] = res.stdout
+      .split('\n')
+      .filter((line) => line.startsWith('> aws s3 sync'));
+    expect(assets).toMatch(
+      /assets s3:\/\/my-bucket\/assets .*--cache-control public,max-age=31536000,immutable/,
+    );
+    expect(entries).toMatch(
+      / s3:\/\/my-bucket --delete --exclude assets\/\* .*--cache-control public,max-age=0,must-revalidate/,
+    );
     expect(res.stdout).toMatch(/deploy: complete/);
+  });
+
+  it('keeps old assets unless --prune-assets is passed', () => {
+    const keep = run(tmp, ['--bucket', 'my-bucket', '--dry-run']);
+    expect(keep.stdout).not.toMatch(/s3:\/\/my-bucket\/assets [^\n]*--delete/);
+
+    const prune = run(tmp, ['--bucket', 'my-bucket', '--prune-assets', '--dry-run']);
+    expect(prune.stdout).toMatch(/s3:\/\/my-bucket\/assets [^\n]*--delete/);
+  });
+
+  it(`deploys ${DIST}/ by default`, () => {
+    const res = run(tmp, ['--bucket', 'my-bucket', '--dry-run']);
+    expect(res.stdout).toContain(`${join(tmp, DIST)} s3://my-bucket --delete`);
   });
 
   it('includes --endpoint-url when an endpoint is provided (R2/Spaces/MinIO)', () => {
@@ -78,7 +97,7 @@ describe('scripts/deploy.mjs', () => {
     const res = run(tmp, ['--bucket', 'my-bucket', '--cloudfront-id', 'E1234567890', '--dry-run']);
     expect(res.status).toBe(0);
     expect(res.stdout).toMatch(/aws cloudfront create-invalidation --distribution-id E1234567890/);
-    expect(res.stdout).toMatch(/--paths \/index\.html \/sw\.js/);
+    expect(res.stdout).toMatch(/--paths \/\*/);
   });
 
   it('honors env-var fallbacks (DEPLOY_BUCKET, DEPLOY_ENDPOINT)', () => {

@@ -9,7 +9,13 @@ const envSchema = z.object({
   VITE_OEMBED_BASE_URL: z.string().url().default('https://noembed.com/embed'),
 });
 
-const parsed = envSchema.safeParse(import.meta.env);
+// `KEY=""` (as copied from .env.example) means "not set": drop it so the
+// schema's defaults apply instead of validating an empty string.
+const defined = Object.fromEntries(
+  Object.entries(import.meta.env).filter(([, value]) => value !== ''),
+);
+
+const parsed = envSchema.safeParse(defined);
 
 if (!parsed.success) {
   const details = JSON.stringify(parsed.error.flatten().fieldErrors, null, 2);

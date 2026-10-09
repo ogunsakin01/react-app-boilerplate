@@ -1,4 +1,4 @@
-import { mkdir, readdir, stat } from 'node:fs/promises';
+import { mkdir, readdir, rm, stat } from 'node:fs/promises';
 import { basename, relative, resolve } from 'node:path';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
@@ -7,6 +7,8 @@ import type { CliArgs } from './args.js';
 import { copyTemplate, renameProject } from './copy.js';
 import { detectPackageManager } from './detect.js';
 import { runGitInit, runInstall } from './install.js';
+import { toPackageName } from './name.js';
+import { adaptToPackageManager } from './pm.js';
 import { promptConfirm, promptPackageManager, promptProjectName } from './prompts.js';
 
 // Anything else in a target-is-cwd scaffold blocks the operation.
@@ -38,11 +40,9 @@ async function isEmptyEnough(path: string): Promise<{ ok: boolean; blockers: str
   return { ok: blockers.length === 0, blockers };
 }
 
-function isValidPackageName(name: string): boolean {
-  return /^[a-z0-9][a-z0-9-_]*$/i.test(name);
-}
-
-export async function runScaffold(args: CliArgs): Promise<void> {
+// Resolves to false when the project was created but git init or install
+// failed, so scripted runs can tell from the exit code.
+export async function runScaffold(args: CliArgs): Promise<boolean> {
   const detected = detectPackageManager();
 
   const rawTarget = args.projectName ?? (args.yes ? 'my-app' : await promptProjectName());
@@ -50,13 +50,16 @@ export async function runScaffold(args: CliArgs): Promise<void> {
 
   const targetDir = scaffoldInPlace ? process.cwd() : resolve(process.cwd(), rawTarget);
 
-  const projectName = scaffoldInPlace ? basename(targetDir) : rawTarget;
+  const projectName = toPackageName(basename(targetDir));
 
-  if (!isValidPackageName(projectName)) {
+  if (!projectName) {
     throw new Error(
-      `Invalid package name derived: ${pc.bold(projectName)}. ` +
-        `Use letters, numbers, dash, or underscore (must start with a letter or number).`,
+      `Can't derive a package name from ${pc.bold(basename(targetDir))}. ` +
+        `Use a folder name with at least one letter or number.`,
     );
+  }
+  if (projectName !== basename(targetDir)) {
+    p.log.info(`Package name: ${pc.bold(projectName)} (npm names must be lowercase, URL-safe)`);
   }
 
   if (scaffoldInPlace) {
@@ -90,49 +93,69 @@ export async function runScaffold(args: CliArgs): Promise<void> {
 
   const variantLabel = args.variant === 'react-ts-ssr' ? ' (SSR / Vike)' : '';
   spinner.start(`Copying template${variantLabel}`);
-  await mkdir(targetDir, { recursive: true });
-  await copyTemplate(targetDir, args.variant);
-  await renameProject(targetDir, projectName);
+  try {
+    await mkdir(targetDir, { recursive: true });
+    await copyTemplate(targetDir, args.variant, { overwrite: !scaffoldInPlace });
+    await renameProject(targetDir, projectName);
+    await adaptToPackageManager(targetDir, pm);
+    if (wantMui) await applyMuiAddon(targetDir);
+    if (wantReactAria) await applyReactAriaAddon(targetDir);
+  } catch (err) {
+    spinner.stop(`Copying template${variantLabel} failed.`, 1);
+    // Only remove what this run created; never touch a pre-existing folder.
+    if (!scaffoldInPlace) await rm(targetDir, { recursive: true, force: true });
+    throw err;
+  }
   spinner.stop(
     scaffoldInPlace
       ? `Template${variantLabel} copied → current directory (${pc.bold(projectName)})`
       : `Template${variantLabel} copied → ${pc.bold(relative(process.cwd(), targetDir))}`,
   );
+  if (wantMui) p.log.success('Material UI added (src/components/atoms/MuiButton).');
+  if (wantReactAria) p.log.success('React Aria added (src/components/atoms/AriaButton).');
 
-  if (wantMui) {
-    spinner.start('Adding Material UI + MuiButton atom');
-    await applyMuiAddon(targetDir);
-    spinner.stop('Material UI added (src/components/atoms/MuiButton).');
-  }
-
-  if (wantReactAria) {
-    spinner.start('Adding React Aria Components + AriaButton atom');
-    await applyReactAriaAddon(targetDir);
-    spinner.stop('React Aria added (src/components/atoms/AriaButton).');
-  }
+  // From here on the project exists, so failures warn and print a recovery
+  // step instead of aborting.
+  const pending: string[] = [];
 
   if (doGit) {
-    spinner.start('Initializing git');
     if (scaffoldInPlace && (await dirExists(resolve(targetDir, '.git')))) {
-      spinner.stop('Git repo already present, skipped init.');
+      p.log.info('Git repo already present, skipped init.');
     } else {
-      await runGitInit(targetDir);
-      spinner.stop('Git initialized.');
+      try {
+        await runGitInit(targetDir);
+        p.log.success('Git initialized.');
+      } catch (err) {
+        p.log.warn(`git init failed (${err instanceof Error ? err.message : String(err)}).`);
+        pending.push('git init');
+      }
     }
   }
 
+  let installed = false;
   if (doInstall) {
-    spinner.start(`Running ${pm} install (this can take a minute)`);
-    await runInstall(targetDir, pm);
-    spinner.stop(`${pm} install complete.`);
+    // No spinner here: the package manager writes its own progress to the
+    // same terminal.
+    p.log.step(`Running ${pm} install (this can take a minute)`);
+    try {
+      await runInstall(targetDir, pm);
+      installed = true;
+      p.log.success(`${pm} install complete.`);
+    } catch (err) {
+      p.log.warn(`${pm} install failed (${err instanceof Error ? err.message : String(err)}).`);
+    }
   }
+  if (!installed) pending.push(`${pm} install`);
 
-  p.outro(pc.green('Done!'));
+  p.outro(
+    pc.green(installed || !doInstall ? 'Done!' : 'Project created - finish the steps below.'),
+  );
 
   console.log('');
   console.log(pc.dim('  Next steps:'));
-  if (!scaffoldInPlace) console.log(pc.dim(`    cd ${rawTarget}`));
-  if (!doInstall) console.log(pc.dim(`    ${pm} install`));
+  if (!scaffoldInPlace) console.log(pc.dim(`    cd ${relative(process.cwd(), targetDir)}`));
+  for (const step of pending) console.log(pc.dim(`    ${step}`));
   console.log(pc.dim(`    ${pm} run dev`));
   console.log('');
+  return !pending.some((step) => step === 'git init') && (installed || !doInstall);
 }

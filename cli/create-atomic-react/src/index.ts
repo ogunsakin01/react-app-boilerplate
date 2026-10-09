@@ -1,11 +1,11 @@
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
-import { HELP, parseArgs } from './args.js';
+import { type CliArgs, HELP, parseArgs } from './args.js';
 import { runInit } from './init.js';
 import { isCancelError } from './prompts.js';
 import { runScaffold } from './scaffold.js';
 
-const VERSION = '0.1.0';
+declare const __VERSION__: string;
 
 async function main(): Promise<void> {
   const raw = process.argv.slice(2);
@@ -25,21 +25,27 @@ async function main(): Promise<void> {
     }
   }
 
-  const args = parseArgs(raw);
+  let args: CliArgs;
+  try {
+    args = parseArgs(raw);
+  } catch (err) {
+    console.error(pc.red(err instanceof Error ? err.message : String(err)));
+    process.exit(1);
+  }
 
   if (args.help) {
     console.log(HELP);
     process.exit(0);
   }
   if (args.version) {
-    console.log(VERSION);
+    console.log(__VERSION__);
     process.exit(0);
   }
 
   p.intro(pc.bgCyan(pc.black(' create-atomic-react ')));
 
   try {
-    await runScaffold(args);
+    if (!(await runScaffold(args))) process.exitCode = 1;
   } catch (err) {
     if (isCancelError(err)) {
       p.cancel('Cancelled.');

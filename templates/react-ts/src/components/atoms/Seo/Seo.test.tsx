@@ -94,4 +94,18 @@ describe('Seo', () => {
     renderSeo({ title: 'Draft', robots: 'noindex,nofollow' });
     expect(metaContent('meta[name="robots"]')).toBe('noindex,nofollow');
   });
+
+  it('removes the index.html default tags once it renders', () => {
+    const fallback = document.createElement('meta');
+    fallback.setAttribute('name', 'description');
+    fallback.setAttribute('content', 'default');
+    fallback.setAttribute('data-seo-default', '');
+    document.head.append(fallback);
+
+    renderSeo({ title: 'Page', description: 'Specific' });
+
+    expect(document.head.querySelector('[data-seo-default]')).toBeNull();
+    const descriptions = [...document.head.querySelectorAll('meta[name="description"]')];
+    expect(descriptions.map((m) => m.getAttribute('content'))).toEqual(['Specific']);
+  });
 });

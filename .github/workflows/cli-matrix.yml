@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   scaffold:
     name: scaffold (${{ matrix.pm }}, ${{ matrix.variant }})
@@ -49,6 +52,18 @@ jobs:
           echo "dir=$TARBALL_DIR" >> "$GITHUB_OUTPUT"
           ls "$TARBALL_DIR"
 
+      # Scaffold from the packed tarball, not dist/, so anything npm drops from
+      # the published package (e.g. .gitignore) breaks this job.
+      - name: Pack + extract CLI
+        id: cli
+        run: |
+          CLI_DIR="$RUNNER_TEMP/cli"
+          mkdir -p "$CLI_DIR"
+          (cd cli/create-atomic-react && pnpm pack --pack-destination "$CLI_DIR")
+          tar xzf "$CLI_DIR"/create-atomic-react-*.tgz -C "$CLI_DIR"
+          (cd "$CLI_DIR/package" && npm install --omit=dev --no-audit --no-fund)
+          echo "bin=$CLI_DIR/package/dist/index.js" >> "$GITHUB_OUTPUT"
+
       - name: Scaffold via CLI + rewrite deps to tarballs
         id: scaffold
         env:
@@ -58,7 +73,7 @@ jobs:
           SCAFFOLD_ROOT="$RUNNER_TEMP/scaffold"
           mkdir -p "$SCAFFOLD_ROOT"
           cd "$SCAFFOLD_ROOT"
-          node "$GITHUB_WORKSPACE/cli/create-atomic-react/dist/index.js" \
+          node "${{ steps.cli.outputs.bin }}" \
             my-app --yes --pm ${{ matrix.pm }} --no-install --no-git $SSR_FLAG
           cd my-app
           node -e '
@@ -69,13 +84,29 @@ jobs:
               for (const name of Object.keys(deps)) {
                 if (name.startsWith("@react-app-boilerplate/")) {
                   const short = name.replace("@react-app-boilerplate/", "react-app-boilerplate-");
-                  deps[name] = `file:${process.env.TARBALL_DIR}/${short}-0.1.0.tgz`;
+                  const tgz = fs.readdirSync(process.env.TARBALL_DIR)
+                    .find((f) => f.startsWith(`${short}-`) && f.endsWith(".tgz"));
+                  if (!tgz) throw new Error(`No tarball for ${name} in ${process.env.TARBALL_DIR}`);
+                  deps[name] = `file:${process.env.TARBALL_DIR}/${tgz}`;
                 }
               }
             }
             fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
           '
           echo "dir=$SCAFFOLD_ROOT/my-app" >> "$GITHUB_OUTPUT"
+
+      - name: Verify .gitignore + agent docs
+        working-directory: ${{ steps.scaffold.outputs.dir }}
+        run: |
+          test -f AGENTS.md
+          grep -q '^@AGENTS.md$' CLAUDE.md
+          test -f .gitignore
+          test ! -e _gitignore
+          git init -q
+          for entry in node_modules dist coverage .env .env.local; do
+            git check-ignore -q "$entry" || { echo "::error::$entry is not ignored"; exit 1; }
+          done
+          ! git check-ignore -q .env.example
 
       # Ubuntu runners ship yarn 1.22 preinstalled. COREPACK_ENABLE_STRICT=0
       # lets corepack fall through to it when the target has no packageManager

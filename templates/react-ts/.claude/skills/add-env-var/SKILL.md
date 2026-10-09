@@ -14,7 +14,10 @@ const envSchema = z.object({
   VITE_APP_TITLE: z.string().min(1).default('react-app-boilerplate'),
   // add here:
   VITE_API_BASE_URL: z.string().url(),
-  VITE_ENABLE_BETA: z.coerce.boolean().default(false),
+  VITE_ENABLE_BETA: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 ```
 
@@ -47,7 +50,7 @@ TypeScript infers each field's type from the schema - no manual `.d.ts` needed.
 - **Only `VITE_`-prefixed vars reach the browser bundle** (Vite convention). This boilerplate is client-only, so every var must be `VITE_`.
 - **Never** hard-code URLs, keys, or feature flags. If it changes per environment, it's an env var.
 - **Secrets belong on the server**, not in `VITE_*`. If it must be secret from the user, it doesn't belong in this app at all.
-- For booleans, use `z.coerce.boolean()` because env values arrive as strings.
+- For booleans, don't use `z.coerce.boolean()` - env values arrive as strings and it turns `"false"` into `true`. Use the `z.enum(['true', 'false']).transform(...)` pattern above.
 
 ## Verify
 

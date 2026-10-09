@@ -2,7 +2,7 @@ import { render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { afterEach, describe, expect, it } from 'vitest';
-import { useTheme } from './theme-context';
+import { THEME_STORAGE_KEY, useTheme } from './theme-context';
 import { ThemeProvider } from './ThemeProvider';
 
 function ThemeReadout() {
@@ -21,6 +21,7 @@ function ThemeReadout() {
 }
 
 afterEach(() => {
+  localStorage.clear();
   delete document.documentElement.dataset.theme;
 });
 
@@ -76,5 +77,57 @@ describe('ThemeProvider', () => {
       </ThemeProvider>,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe('ThemeProvider preferences', () => {
+  const originalMatchMedia = window.matchMedia;
+
+  function mockSystemTheme(dark: boolean) {
+    window.matchMedia = ((query: string) => ({
+      matches: dark && query.includes('dark'),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+  }
+
+  afterEach(() => {
+    window.matchMedia = originalMatchMedia;
+    localStorage.clear();
+    delete document.documentElement.dataset.theme;
+  });
+
+  it('follows the system dark preference when nothing is saved', async () => {
+    mockSystemTheme(true);
+    render(
+      <ThemeProvider>
+        <ThemeReadout />
+      </ThemeProvider>,
+    );
+    expect(await screen.findByText('dark')).toBeInTheDocument();
+    expect(document.documentElement.dataset.theme).toBe('dark');
+  });
+
+  it('restores a saved choice over the system preference', async () => {
+    mockSystemTheme(true);
+    localStorage.setItem(THEME_STORAGE_KEY, 'light');
+    render(
+      <ThemeProvider>
+        <ThemeReadout />
+      </ThemeProvider>,
+    );
+    expect(await screen.findByText('light')).toBeInTheDocument();
+  });
+
+  it('saves an explicit choice', async () => {
+    const user = userEvent.setup();
+    render(
+      <ThemeProvider>
+        <ThemeReadout />
+      </ThemeProvider>,
+    );
+    await user.click(screen.getByRole('button', { name: 'force dark' }));
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
   });
 });

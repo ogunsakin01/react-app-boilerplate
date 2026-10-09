@@ -7,3 +7,11 @@ storybook-static
 playwright-report
 test-results
 /e2e/.auth
+coverage
+*.log
+.DS_Store
+
+# Env files hold secrets (Sentry DSN, deploy creds); only the example is shared.
+.env
+.env.*
+!.env.example

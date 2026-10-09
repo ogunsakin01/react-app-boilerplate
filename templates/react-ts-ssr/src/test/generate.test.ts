@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -87,7 +87,6 @@ describe('scripts/generate.mjs', () => {
 
   it('kebab-cases multi-word page names into the route slug', () => {
     run(tmp, ['--kind', 'page', '--name', 'UserSettings']);
-    expect(existsSync(join(tmp, 'pages', 'user-settings', '+Page.tsx'))).toBe(true);
     const page = readFileSync(join(tmp, 'pages', 'user-settings', '+Page.tsx'), 'utf8');
     expect(page).toContain("import { UserSettings } from '@/pages/UserSettings'");
   });
@@ -123,6 +122,29 @@ describe('scripts/generate.mjs', () => {
     run(tmp, ['--kind', 'atom', '--name', 'Existing']);
     const res = run(tmp, ['--kind', 'atom', '--name', 'Existing']);
     expect(res.status).not.toBe(0);
-    expect(res.stdout + res.stderr).toMatch(/already exists/i);
+    expect(res.stdout + res.stderr).toMatch(/Refusing to overwrite/i);
+  });
+
+  it('refuses a page whose Vike page already exists', () => {
+    mkdirSync(join(tmp, 'pages', 'docs'), { recursive: true });
+    writeFileSync(join(tmp, 'pages', 'docs', '+Page.tsx'), '// existing page');
+    const res = run(tmp, ['--kind', 'page', '--name', 'Docs']);
+    expect(res.status).not.toBe(0);
+    expect(res.stdout + res.stderr).toMatch(/pages\/docs\/\+Page\.tsx/);
+    expect(readFileSync(join(tmp, 'pages', 'docs', '+Page.tsx'), 'utf8')).toBe('// existing page');
+    expect(existsSync(join(tmp, 'src', 'pages', 'Docs'))).toBe(false);
+  });
+
+  it('imports the page from --dir in the Vike page', () => {
+    run(tmp, ['--kind', 'page', '--name', 'Report', '--dir', 'src/features/reports']);
+    const route = readFileSync(join(tmp, 'pages', 'report', '+Page.tsx'), 'utf8');
+    expect(route).toContain("from '@/features/reports/Report'");
+  });
+
+  it('generates pages without a nested <main> landmark', () => {
+    run(tmp, ['--kind', 'page', '--name', 'Settings']);
+    const page = readFileSync(join(tmp, 'src', 'pages', 'Settings', 'Settings.tsx'), 'utf8');
+    expect(page).not.toContain('<main');
+    expect(existsSync(join(tmp, 'pages', 'settings', '+description.ts'))).toBe(true);
   });
 });

@@ -2,9 +2,29 @@
 
 Design decisions and predictable bikeshedding, answered up front. If you're about to open an issue titled "why not `<library>`", start here.
 
+## Which variant should I pick?
+
+|                          | SPA (default)                                   | SSR (`--ssr`)                                                     |
+| ------------------------ | ----------------------------------------------- | ----------------------------------------------------------------- |
+| Rendering                | in the browser                                  | prerendered to static HTML at build time, hydrated in the browser |
+| Router                   | TanStack Router                                 | Vike                                                              |
+| Link previews (X, Slack) | no - bots see the empty shell                   | yes - tags are in the HTML                                        |
+| PWA / offline            | yes                                             | no                                                                |
+| Hosting                  | any static host                                 | any static host                                                   |
+| Best for                 | apps behind a login, dashboards, internal tools | marketing sites, blogs, docs, anything shared on social           |
+
+```bash
+npm create atomic-react@latest my-app            # SPA
+npm create atomic-react@latest my-app -- --ssr   # SSR
+```
+
+Both variants share everything else: atomic components, the generator, TanStack Query, Tailwind, MSW, Storybook, Vitest + jest-axe, Playwright, Sentry and the deploy script. Add `--mui` or `--react-aria` to either.
+
 ## Why not Next.js (or Remix, or TanStack Start)?
 
-This is a **client-rendered SPA** boilerplate, not a meta-framework. If you need SSR, ISR, server components, edge functions, or server actions, use Next.js / Remix / TanStack Start. This boilerplate optimizes for the case where you have a real backend (or none) and want a Vite + React app that ships to any static host, works offline as a PWA, and doesn't ship a Node server. If you don't need SSR, the SPA path is faster to build, faster to deploy, cheaper to host, and easier to reason about.
+Neither variant is a meta-framework. Both ship static files and no Node server: the SPA renders in the browser, and the SSR variant renders every page **once, at build time**. If you need rendering per request, React Server Components, server actions, API routes, ISR, or edge functions, use Next.js, React Router (framework mode) or TanStack Start.
+
+This boilerplate optimizes for the case where you have a real backend (or none) and want a Vite + React app that ships to any static host. Without a server, it's faster to build, faster to deploy, cheaper to host, and easier to reason about.
 
 ## Why atomic design?
 
@@ -42,7 +62,9 @@ Modern Googlebot executes JavaScript, so the `<Seo>` atom's tags and the generat
 npm create atomic-react@latest my-app -- --ssr
 ```
 
-The SSR variant swaps TanStack Router for **[Vike](https://vike.dev/) with prerender enabled**. Every route (`/`, `/docs`, `/example`, `/watch`) is compiled to a real static `.html` file at build time, with `<title>` / `<meta>` / `og:*` tags baked into `<head>`. Social crawlers see them because they're right there in the HTML. Deployment stays static - no server, no serverless functions - the same Vercel / Netlify / Cloudflare Pages configs work. Flip `prerender: false` on a specific page's `+config.ts` if you need per-request SSR later.
+The SSR variant swaps TanStack Router for **[Vike](https://vike.dev/) with prerender enabled**. Every route (`/`, `/docs`, `/example`, `/watch`) is compiled to a real static `.html` file at build time, with `<title>` / `<meta>` / `og:*` tags baked into `<head>`. Social crawlers see them because they're right there in the HTML. Deployment stays static - no server, no serverless functions. The SSR variant ships its own Vercel / Netlify / Cloudflare Pages configs that publish `dist/client`.
+
+Because pages are rendered at build time, per-visit data (query strings, the signed-in user, live prices) is fetched in the browser after hydration. Moving a page to per-request rendering means turning off `prerender` for it **and** adding a server (e.g. Vike with Hono or Express) - the template doesn't include one.
 
 ## Why not include auth?
 
@@ -73,9 +95,9 @@ Removes every `src/**/example` directory, deletes the example routes and specs, 
 
 Yes, on purpose. Three artifacts make it fluent:
 
-- **`AGENTS.md`** at the root - conventions, testing patterns, mock recipes.
+- **`AGENTS.md`** in every scaffolded project, written for that variant (SPA or SSR) - conventions, routing, SEO, testing mocks, env and deploy rules. A `CLAUDE.md` imports it so Claude Code loads the same guidance.
 - **`llms.txt`** - [llmstxt.org](https://llmstxt.org/) convention, retrievable in one fetch.
-- **`.claude/skills/`** - task-scoped skills bundled with the template. Claude Code discovers them automatically.
+- **`.claude/skills/`** - task-scoped skills bundled with each variant (generate a component, add an env var, add SEO, mock an endpoint, configure Sentry / deploy, and PWA in the SPA). Claude Code discovers them automatically.
 
 Cursor, Codex, Aider, and any agent that reads `AGENTS.md` work out of the box.
 

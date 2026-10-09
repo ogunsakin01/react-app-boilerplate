@@ -36,7 +36,7 @@ Scaffolds a component or page with:
   - <Name>.stories.tsx   Storybook story
   - index.ts             barrel export
   - <Name>.spec.ts       Playwright e2e (pages only)
-  - pages/<slug>/+Page.tsx + +title.ts   Vike page files (pages only)
+  - pages/<slug>/+Page.tsx, +title.ts, +description.ts   Vike page files (pages only)
 
 Prompts for anything not passed as a flag.`);
   process.exit(0);
@@ -49,12 +49,19 @@ const name = await resolveName(values.name);
 const baseDir = values.dir?.trim() || KIND_DIRS[kind];
 const targetDir = join(ROOT, baseDir, name);
 
-if (existsSync(targetDir)) {
-  p.cancel(`Target already exists: ${relative(ROOT, targetDir)}`);
+const files = buildFiles({ kind, name, baseDir });
+
+// Pages also write Vike files and an e2e spec outside targetDir, so every file
+// is checked: `--name Docs` must not silently replace pages/docs/+Page.tsx.
+const existing = [targetDir, ...Object.keys(files).map((f) => join(ROOT, f))].filter((f) =>
+  existsSync(f),
+);
+if (existing.length > 0) {
+  p.cancel(
+    `Refusing to overwrite:\n  ${existing.map((f) => relative(ROOT, f)).join('\n  ')}\nPick another name.`,
+  );
   process.exit(1);
 }
-
-const files = buildFiles({ kind, name, baseDir });
 
 for (const [path, contents] of Object.entries(files)) {
   const full = join(ROOT, path);
@@ -148,6 +155,15 @@ function componentFiles({ kind, name, baseDir }) {
   };
 }
 
+// `@/` maps to src/, so a --dir inside src/ keeps the alias; anything else is
+// imported relative to pages/<slug>/.
+function importPath(baseDir, name) {
+  const dir = baseDir.replace(/\\/g, '/').replace(/\/$/, '');
+  if (dir === 'src' || dir.startsWith('src/'))
+    return `@/${dir.slice(4) ? `${dir.slice(4)}/` : ''}${name}`;
+  return `../../${dir}/${name}`;
+}
+
 function pageFiles({ name, baseDir }) {
   const dir = `${baseDir}/${name}`;
   const slug = kebab(name);
@@ -156,8 +172,9 @@ function pageFiles({ name, baseDir }) {
     [`${dir}/${name}.test.tsx`]: pageTest(name),
     [`${dir}/${name}.stories.tsx`]: componentStory({ name, group: 'Pages' }),
     [`${dir}/index.ts`]: pageBarrel(name),
-    [`pages/${slug}/+Page.tsx`]: vikePageSource({ name, slug }),
+    [`pages/${slug}/+Page.tsx`]: vikePageSource({ name, from: importPath(baseDir, name) }),
     [`pages/${slug}/+title.ts`]: vikeTitleSource({ name }),
+    [`pages/${slug}/+description.ts`]: vikeDescriptionSource({ name }),
     [`e2e/${name}.spec.ts`]: playwrightSource({ name, slug }),
   };
 }
@@ -178,13 +195,17 @@ export function ${name}({ title = '${name}' }: ${name}Props) {
 `;
 }
 
+// A <section>, not <main>: MainLayout already renders the page's <main>
+// landmark, and a second one is an axe best-practice violation.
+// Title and description live in pages/<slug>/+title.ts and +description.ts so
+// they're baked into the prerendered HTML.
 function pageSource(name) {
   return `export function ${name}() {
   return (
-    <main className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4">
       <h1 className="text-3xl font-semibold tracking-tight">${name}</h1>
       <p className="text-muted">This page was scaffolded by \`pnpm generate\`. Replace me.</p>
-    </main>
+    </section>
   );
 }
 `;
@@ -258,8 +279,8 @@ describe('${name}', () => {
 `;
 }
 
-function vikePageSource({ name }) {
-  return `import { ${name} } from '@/pages/${name}';
+function vikePageSource({ name, from }) {
+  return `import { ${name} } from '${from}';
 
 export default function Page() {
   return <${name} />;
@@ -268,7 +289,14 @@ export default function Page() {
 }
 
 function vikeTitleSource({ name }) {
-  return `export const title = '${name}';
+  return `import { env } from '@/lib/env';
+
+export const title = \`${name} · \${env.VITE_APP_TITLE}\`;
+`;
+}
+
+function vikeDescriptionSource({ name }) {
+  return `export const description = 'Describe the ${name} page.';
 `;
 }
 

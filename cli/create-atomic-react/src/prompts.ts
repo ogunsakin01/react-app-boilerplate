@@ -1,5 +1,7 @@
+import { basename } from 'node:path';
 import * as p from '@clack/prompts';
 import type { PackageManager } from './args.js';
+import { toPackageName } from './name.js';
 
 const CANCEL_MSG = '__cancel__';
 
@@ -20,8 +22,8 @@ export async function promptProjectName(defaultName = 'my-app'): Promise<string>
       validate: (v) => {
         if (!v || v.length === 0) return 'Name is required.';
         if (v === '.') return; // sentinel. handled by scaffold
-        if (!/^[a-z0-9][a-z0-9-_]*$/i.test(v)) {
-          return 'Use letters, numbers, dash, or underscore (must start with a letter or number).';
+        if (!toPackageName(basename(v))) {
+          return 'The folder name needs at least one letter or number.';
         }
       },
     }),

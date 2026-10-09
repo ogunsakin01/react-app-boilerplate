@@ -1,6 +1,6 @@
-# react-app-boilerplate
+# create-atomic-react
 
-**The opinionated React + TypeScript + Vite boilerplate.** Scaffold a production-ready SPA - or an SSR app with prerendered SEO - in one command with TanStack Router (SPA) or Vike (SSR), TanStack Query, Tailwind CSS v4, MSW, Storybook, Playwright, jest-axe accessibility testing, atomic-design components, ESLint 9 flat config, husky commit hooks, Renovate, and Changesets - zero configuration required.
+**The opinionated React + TypeScript + Vite boilerplate.** Scaffold a production-ready SPA - or an app with every page prerendered to static HTML for SEO - in one command with TanStack Router (SPA) or Vike (SSR), TanStack Query, Tailwind CSS v4, MSW, Storybook, Playwright, jest-axe accessibility testing, atomic-design components, ESLint 9 flat config, husky commit hooks, Renovate, and Changesets - zero configuration required. Every project ships an `AGENTS.md` so Claude Code, Cursor, Codex and other AI coding agents follow its conventions from the first prompt.
 
 ```bash
 # SPA (default): TanStack Router, PWA, everything client-side
@@ -10,7 +10,18 @@ npm create atomic-react@latest my-app
 npm create atomic-react@latest my-app -- --ssr
 ```
 
-Ships as four pieces: two templates (`templates/react-ts` for SPA, `templates/react-ts-ssr` for Vike), four shareable configs published to npm under `@react-app-boilerplate/*`, and the `create-atomic-react` scaffolding CLI.
+|                             | SPA (default)                                   | SSR (`--ssr`)                                           |
+| --------------------------- | ----------------------------------------------- | ------------------------------------------------------- |
+| Rendering                   | in the browser                                  | prerendered to static HTML at build time, then hydrated |
+| Router                      | TanStack Router                                 | Vike                                                    |
+| Link previews (X, Slack, …) | no - bots see an empty shell                    | yes - tags are in the HTML                              |
+| PWA / offline               | yes                                             | no                                                      |
+| Server needed               | no - any static host                            | no - any static host                                    |
+| Best for                    | apps behind a login, dashboards, internal tools | marketing sites, blogs, docs, anything shared on social |
+
+Need rendering per request, React Server Components or server actions? Use Next.js, React Router (framework mode) or TanStack Start. See the [FAQ](./docs/FAQ.md#which-variant-should-i-pick).
+
+This repo (`react-app-boilerplate`) ships as four pieces: two templates (`templates/react-ts` for SPA, `templates/react-ts-ssr` for Vike), four shareable configs published to npm under `@react-app-boilerplate/*`, and the `create-atomic-react` scaffolding CLI.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ogunsakin01/react-app-boilerplate/ci.yml?branch=main&label=CI&style=flat-square)](https://github.com/ogunsakin01/react-app-boilerplate/actions/workflows/ci.yml)
 [![CLI matrix](https://img.shields.io/github/actions/workflow/status/ogunsakin01/react-app-boilerplate/cli-matrix.yml?branch=main&label=CLI%20matrix&style=flat-square)](https://github.com/ogunsakin01/react-app-boilerplate/actions/workflows/cli-matrix.yml)
@@ -26,6 +37,7 @@ Ships as four pieces: two templates (`templates/react-ts` for SPA, `templates/re
 
 1. [AI agent support](#ai-agent-support)
 2. [What you get](#what-you-get)
+   - [Compared with create-vite and create-next-app](#compared-with-create-vite-and-create-next-app)
 3. [Using the boilerplate](#using-the-boilerplate)
 4. [After you scaffold](#after-you-scaffold)
 5. [Common tasks](#common-tasks)
@@ -39,13 +51,14 @@ Ships as four pieces: two templates (`templates/react-ts` for SPA, `templates/re
 
 ## AI agent support
 
-If you code with an AI agent (Claude Code, Cursor, Codex, Aider, etc.), scaffolded projects are configured for them out of the box. Three artifacts do the heavy lifting.
+If you code with an AI agent (Claude Code, Cursor, Codex, Aider, etc.), scaffolded projects are configured for them out of the box. Each variant ships its own guidance, so an SSR project never tells the agent to reach for TanStack Router, and an SPA project never mentions Vike.
 
-| File                        | Audience                                                                             | What it does                                                                                 |
-| --------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| [`AGENTS.md`](./AGENTS.md)  | Any agent that reads `AGENTS.md` (Cursor, Codex, Aider, Claude Code, …)              | Explains component conventions, testing patterns, common tasks, and what to avoid            |
-| [`llms.txt`](./llms.txt)    | LLM crawlers + agents that follow the [llmstxt.org](https://llmstxt.org/) convention | One-fetch summary of the boilerplate: what it is, when to recommend, quickstart, conventions |
-| `.claude/skills/*/SKILL.md` | Claude Code specifically                                                             | Task-scoped skills the agent can invoke directly                                             |
+| File                                 | Audience                                                                             | What it does                                                                                                                                                                                                                                       |
+| ------------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AGENTS.md` (in the project)         | Any agent that reads `AGENTS.md` (Cursor, Codex, Aider, Claude Code, …)              | Variant-specific conventions: routing, SEO, testing mocks, env, deploy, and what to avoid. `--mui` / `--react-aria` append their own section. See the [SPA](./templates/react-ts/AGENTS.md) and [SSR](./templates/react-ts-ssr/AGENTS.md) versions |
+| `CLAUDE.md` (in the project)         | Claude Code                                                                          | Imports `AGENTS.md`, so Claude Code loads the same guidance                                                                                                                                                                                        |
+| [`llms.txt`](./llms.txt) (this repo) | LLM crawlers + agents that follow the [llmstxt.org](https://llmstxt.org/) convention | One-fetch summary of the boilerplate: what it is, which variant to recommend, quickstart, conventions                                                                                                                                              |
+| `.claude/skills/*/SKILL.md`          | Claude Code specifically                                                             | Task-scoped skills the agent can invoke directly                                                                                                                                                                                                   |
 
 ### Bundled Claude Code skills
 
@@ -54,8 +67,8 @@ Located at `.claude/skills/` in the scaffolded project. Claude Code auto-discove
 - **`generate-component`** - Scaffold a new atom / molecule / organism / template / page with `.tsx` + a11y-tested `.test.tsx` + `.stories.tsx` + `index.ts` (plus route + Playwright spec for pages). Wraps `pnpm generate`.
 - **`add-msw-handler`** - Add a mocked HTTP endpoint to `src/mocks/handlers.ts` so it's picked up by Vitest, Storybook, dev, and Playwright.
 - **`add-env-var`** - Add a typed environment variable. Extends the zod schema, `.env.example`, and inferred types in one go.
-- **`add-seo`** - Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page via the `<Seo>` atom.
-- **`configure-pwa`** - Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
+- **`add-seo`** - Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page - via the `<Seo>` atom (SPA) or Vike's `+title` / `+description` / `+image` / `+Head` files (SSR).
+- **`configure-pwa`** (SPA only) - Tune the PWA manifest, icons, precache patterns, and update-prompt behavior.
 - **`configure-sentry`** - Enable Sentry (DSN), tune sample rates, wire route errors, add replay, upload source maps.
 - **`configure-deploy`** - Ship `dist/` to S3 / R2 / Spaces / MinIO, invalidate CloudFront, set CDN base URL.
 
@@ -63,12 +76,12 @@ When an agent scaffolds a component, it uses the same `pnpm generate` you do. Ou
 
 ## What you get
 
-A single-project React app that is production-ready on day one:
+A single-project React app that is production-ready on day one. Everything below ships in both variants unless it says **SPA** or **SSR**:
 
 - **Vite** dev server and build ([vitejs.dev](https://vitejs.dev/)).
 - **React 19** with **TypeScript** in strict mode ([react.dev](https://react.dev/), [typescriptlang.org](https://www.typescriptlang.org/)).
 - **Tailwind CSS v4** for styling with CSS variable theme tokens ([tailwindcss.com](https://tailwindcss.com/)).
-- **TanStack Router** for file-based routing with zod-validated search params ([tanstack.com/router](https://tanstack.com/router)).
+- **Routing**: **SPA** - TanStack Router, file-based with zod-validated search params ([tanstack.com/router](https://tanstack.com/router)). **SSR** - Vike filesystem routing with every page prerendered at build time ([vike.dev](https://vike.dev/)).
 - **TanStack Query** for server state ([tanstack.com/query](https://tanstack.com/query)).
 - **react-hook-form** + **Zod** for typed forms ([react-hook-form.com](https://react-hook-form.com/), [zod.dev](https://zod.dev/)).
 - **MSW** handlers used by Vitest, Storybook, dev, and Playwright ([mswjs.io](https://mswjs.io/)).
@@ -76,8 +89,8 @@ A single-project React app that is production-ready on day one:
 - **ESLint 9 flat config** and **Prettier** ([eslint.org](https://eslint.org/), [prettier.io](https://prettier.io/)).
 - **husky** pre-commit + commit-msg hooks, **lint-staged**, **commitlint** enforcing Conventional Commits ([typicode.github.io/husky](https://typicode.github.io/husky/), [commitlint.js.org](https://commitlint.js.org/), [conventionalcommits.org](https://www.conventionalcommits.org/)).
 - **Accessibility** enforced at three tiers: `jest-axe` in unit tests, `@storybook/addon-a11y` in Storybook, `@axe-core/playwright` scanning every e2e route. Generated component tests include an axe assertion by default.
-- **SEO** via a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time - always in sync, zero manual steps. **SPA caveat**: social preview crawlers (X, LinkedIn, Slack, Discord) don't run JS, so they see the empty shell. If link previews matter, scaffold with `--ssr` - the Vike variant prerenders every route to real HTML with `<head>` meta baked in. See [FAQ](./docs/FAQ.md#what-spa-seo-can-and-cant-do).
-- **PWA** support via `vite-plugin-pwa`: manifest, precached shell, offline fallback, service worker, and a wired-up `<PwaUpdate>` toast that prompts the user to reload when a new version is available.
+- **SEO**: **SSR** - `+title` / `+description` / `+image` / `+Head` files baked into the prerendered HTML. **SPA** - a small `<Seo>` atom that emits `<title>`, `<meta>`, canonical, Open Graph, and Twitter card tags using React 19's native `<head>` hoisting (no `react-helmet`). Plus `public/robots.txt` and a `sitemap.xml` generator that walks your routes at build time - always in sync, zero manual steps. **SPA caveat**: social preview crawlers (X, LinkedIn, Slack, Discord) don't run JS, so they see the empty shell. If link previews matter, scaffold with `--ssr` - the Vike variant prerenders every route to real HTML with `<head>` meta baked in. See [FAQ](./docs/FAQ.md#what-spa-seo-can-and-cant-do).
+- **PWA** (**SPA**) support via `vite-plugin-pwa`: manifest, precached shell, offline fallback, service worker, and a wired-up `<PwaUpdate>` toast that prompts the user to reload when a new version is available.
 - **Sentry** error tracking + performance monitoring, opt-in via `VITE_SENTRY_DSN` (empty DSN = no-op, no bundle cost in dev).
 - **Deploy anywhere.** Managed hosts work zero-config: `vercel.json`, `netlify.toml`, and `public/_redirects` + `public/_headers` (Cloudflare Pages) ship in the template. For S3-compatible buckets (AWS S3, Cloudflare R2, DigitalOcean Spaces, MinIO), `pnpm deploy` shells out to the AWS CLI with two cache-control tiers and optional CloudFront invalidation. `VITE_BASE_URL` sets the CDN asset prefix at build time.
 - **`pnpm generate`** interactive scaffolder for atoms / molecules / organisms / templates / pages. Produces the full four-file set (or six for pages) with a11y assertions baked in.
@@ -85,6 +98,18 @@ A single-project React app that is production-ready on day one:
 - **Changesets** for version bumps and npm publishing with provenance ([github.com/changesets/changesets](https://github.com/changesets/changesets)).
 
 Every one of these is wired up already. Nothing to configure to start writing feature code.
+
+### Compared with create-vite and create-next-app
+
+|                     | create-atomic-react                      | `create-vite` (react-ts) | `create-next-app`    |
+| ------------------- | ---------------------------------------- | ------------------------ | -------------------- |
+| Output              | static files (SPA or prerendered)        | static files (SPA)       | Next.js app (server) |
+| Router, data, forms | included                                 | bring your own           | Next.js router       |
+| Tests + a11y checks | unit, Storybook, e2e, axe at every layer | none                     | none by default      |
+| API mocking         | MSW, shared across all test layers       | none                     | none                 |
+| Component structure | enforced (atomic design + generator)     | none                     | none                 |
+
+Pick `create-vite` if you want a blank slate, Next.js if you need a server. Pick this if you want a static React app with the decisions already made and tested.
 
 ## Using the boilerplate
 
@@ -272,6 +297,7 @@ Rather than duplicating docs here, this section names each tool used and points 
 
 ```
 your-app/
+├── .claude/skills/                # Claude Code skills (generate-component, add-seo, ...)
 ├── .github/
 │   ├── ISSUE_TEMPLATE/            # bug + feature templates
 │   ├── PULL_REQUEST_TEMPLATE.md
@@ -339,6 +365,8 @@ your-app/
 ├── .nvmrc                         # Node version pin
 ├── .prettierignore
 ├── .prettierrc
+├── AGENTS.md                      # conventions for AI coding agents (variant-specific)
+├── CLAUDE.md                      # imports AGENTS.md for Claude Code
 ├── CODE_OF_CONDUCT.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md

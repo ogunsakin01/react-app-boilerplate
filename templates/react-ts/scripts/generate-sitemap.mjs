@@ -1,12 +1,10 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseArgs } from 'node:util';
+import { parseArgs, parseEnv } from 'node:util';
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
-
-if (isMain) main();
 
 function main() {
   const { values } = parseArgs({
@@ -22,7 +20,8 @@ function main() {
     console.log(`Usage: node scripts/generate-sitemap.mjs [options]
 
 Options:
-  -b, --base-url <url>  Absolute site URL (default: $VITE_SITE_URL or "https://example.com")
+  -b, --base-url <url>  Absolute site URL (default: VITE_SITE_URL from the environment or
+                        .env / .env.production, else "https://example.com")
   -o, --out <path>      Output file (default: dist/sitemap.xml)
   -r, --routes <dir>    Routes directory (default: src/routes)
 
@@ -35,37 +34,93 @@ script if you need dynamic entries (e.g. blog posts pulled from a CMS).`);
   const cwd = process.cwd();
   const routesDir = resolve(cwd, values.routes ?? 'src/routes');
   const outPath = resolve(cwd, values.out ?? 'dist/sitemap.xml');
-  const baseUrl = (
-    values['base-url'] ??
-    process.env.VITE_SITE_URL ??
-    'https://example.com'
-  ).replace(/\/$/, '');
+  const baseUrl = resolveBaseUrl(values['base-url'], cwd);
+  if (baseUrl === DEFAULT_BASE_URL) {
+    console.warn(
+      `sitemap: VITE_SITE_URL is not set - URLs use ${DEFAULT_BASE_URL}. Set it in .env.production or the build environment.`,
+    );
+  }
 
   const paths = collectRoutePaths(routesDir);
   const xml = buildSitemap(paths, baseUrl);
 
   mkdirSync(join(outPath, '..'), { recursive: true });
   writeFileSync(outPath, xml);
+  absolutizeRobots(join(outPath, '..', 'robots.txt'), `${baseUrl}/${basename(outPath)}`);
 
   console.log(
     `sitemap: wrote ${paths.length} URL${paths.length === 1 ? '' : 's'} to ${outPath} (base ${baseUrl})`,
   );
 }
 
+// Mirrors TanStack Router's file-based routing rules closely enough for a
+// sitemap: folders and `.` both nest, `index` / `route` name their parent,
+// `_pathless` and `(group)` segments add nothing to the URL, `-ignored` files
+// aren't routes, and dynamic `$param` routes are skipped.
 export function collectRoutePaths(dir) {
   if (!existsSync(dir)) return [];
-  const files = readdirSync(dir, { withFileTypes: true });
-  const paths = [];
-  for (const entry of files) {
-    if (entry.isDirectory()) continue;
-    const name = entry.name;
-    if (!name.endsWith('.tsx') && !name.endsWith('.ts')) continue;
-    if (name.startsWith('__')) continue;
-    const stem = name.replace(/\.(tsx|ts)$/, '');
-    if (stem.includes('$')) continue;
-    paths.push(stem === 'index' ? '/' : `/${stem}`);
+  const paths = new Set();
+
+  const walk = (current, parents) => {
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      if (entry.name.startsWith('-')) continue;
+      if (entry.isDirectory()) {
+        walk(join(current, entry.name), [...parents, entry.name]);
+        continue;
+      }
+      if (!/\.(tsx|ts|jsx|js)$/.test(entry.name) || /\.(test|spec)\./.test(entry.name)) continue;
+      const url = toUrl([...parents, ...entry.name.replace(/\.(tsx|ts|jsx|js)$/, '').split('.')]);
+      if (url) paths.add(url);
+    }
+  };
+
+  walk(dir, []);
+  return [...paths].sort();
+}
+
+function toUrl(rawSegments) {
+  if (rawSegments.includes('__root')) return null;
+  const segments = rawSegments.filter((s) => !/^\(.*\)$/.test(s));
+  if (segments.some((s) => s.includes('$') || s.startsWith('-'))) return null;
+
+  const isIndex = segments.at(-1) === 'index';
+  if (isIndex || segments.at(-1) === 'route') segments.pop();
+  // A pathless file that isn't an index is a layout, not a page.
+  if (!isIndex && segments.length > 0 && segments.at(-1).startsWith('_')) return null;
+
+  const visible = segments.filter((s) => !s.startsWith('_')).map((s) => s.replace(/_$/, ''));
+  return `/${visible.join('/')}`;
+}
+
+const DEFAULT_BASE_URL = 'https://example.com';
+
+// Same files, same precedence as `vite build` (later files win).
+const ENV_FILES = ['.env', '.env.local', '.env.production', '.env.production.local'];
+
+function readEnvFiles(cwd) {
+  const merged = {};
+  for (const file of ENV_FILES) {
+    const path = join(cwd, file);
+    if (existsSync(path)) Object.assign(merged, parseEnv(readFileSync(path, 'utf8')));
   }
-  return paths.sort();
+  return merged;
+}
+
+// Flag, then the shell, then the project's .env files for production mode, so
+// a VITE_SITE_URL in .env.production works without exporting it.
+export function resolveBaseUrl(flag, cwd) {
+  const fromFiles = readEnvFiles(cwd).VITE_SITE_URL;
+  const url = flag || process.env.VITE_SITE_URL || fromFiles || DEFAULT_BASE_URL;
+  return url.replace(/\/$/, '');
+}
+
+// robots.txt must point at the sitemap with an absolute URL; the template ships
+// a relative placeholder because the domain isn't known until build time.
+export function absolutizeRobots(robotsPath, sitemapUrl) {
+  if (!existsSync(robotsPath)) return;
+  const robots = readFileSync(robotsPath, 'utf8');
+  const next = robots.replace(/^Sitemap:\s*\/.*$/m, `Sitemap: ${sitemapUrl}`);
+  if (next !== robots) writeFileSync(robotsPath, next);
 }
 
 export function buildSitemap(paths, baseUrl) {
@@ -93,3 +148,5 @@ function escape(s) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 }
+
+if (isMain) main();

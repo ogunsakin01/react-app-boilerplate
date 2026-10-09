@@ -81,7 +81,11 @@ function seed(root: string) {
   // e2e
   mkdirSync(join(root, 'e2e'), { recursive: true });
   writeFileSync(join(root, 'e2e', 'app.spec.ts'), '// example e2e specs');
-  writeFileSync(join(root, 'e2e', 'a11y.spec.ts'), '// a11y coverage');
+  writeFileSync(join(root, 'e2e', 'a11y.spec.ts'), "const routes = ['/', '/docs', '/example'];");
+  writeFileSync(
+    join(root, 'src', 'components', 'templates', 'MainLayout', 'MainLayout.test.tsx'),
+    "expect(screen.getByRole('link', { name: /docs/i }))",
+  );
 }
 
 describe('scripts/strip-example.mjs', () => {
@@ -162,7 +166,25 @@ describe('scripts/strip-example.mjs', () => {
     expect(existsSync(join(tmp, 'e2e', 'smoke.spec.ts'))).toBe(true);
   });
 
-  it('simplifies MainLayout nav to just the theme toggle + repo link', () => {
+  it('trims the a11y spec to routes that still exist', () => {
+    run(tmp);
+    const spec = readFileSync(join(tmp, 'e2e', 'a11y.spec.ts'), 'utf8');
+    expect(spec).toContain("path: '/'");
+    expect(spec).not.toContain('/docs');
+    expect(spec).not.toContain('/example');
+  });
+
+  it('rewrites the MainLayout test to match the simplified nav', () => {
+    run(tmp);
+    const test = readFileSync(
+      join(tmp, 'src', 'components', 'templates', 'MainLayout', 'MainLayout.test.tsx'),
+      'utf8',
+    );
+    expect(test).not.toMatch(/name: \/docs\//);
+    expect(test).toContain('toHaveNoViolations');
+  });
+
+  it('simplifies MainLayout nav to just the theme toggle', () => {
     run(tmp);
     const layout = readFileSync(
       join(tmp, 'src', 'components', 'templates', 'MainLayout', 'MainLayout.tsx'),
@@ -177,7 +199,7 @@ describe('scripts/strip-example.mjs', () => {
     run(tmp);
     const second = run(tmp);
     expect(second.status).toBe(0);
-    expect(second.stdout).toMatch(/nothing to do|1 change|2 change/);
+    expect(second.stdout).toMatch(/nothing to do/);
   });
 
   it('--dry-run prints changes without writing', () => {

@@ -14,7 +14,20 @@ describe('parseEnv', () => {
   });
 
   it('throws when a value fails the schema', () => {
-    expect(() => parseEnv({ VITE_APP_TITLE: '' })).toThrow(/Invalid environment variables/);
+    expect(() => parseEnv({ VITE_SENTRY_TRACES_SAMPLE_RATE: '5' })).toThrow(
+      /Invalid environment variables/,
+    );
     expect(() => parseEnv({ VITE_SENTRY_DSN: 'not-a-url' })).toThrow(/Invalid environment/);
+  });
+
+  it('treats empty strings from .env.example as unset so defaults apply', () => {
+    const env = parseEnv({
+      VITE_APP_TITLE: '',
+      VITE_SENTRY_ENVIRONMENT: '',
+      VITE_SENTRY_TRACES_SAMPLE_RATE: '',
+    });
+    expect(env.VITE_APP_TITLE).toBe('react-app-boilerplate');
+    expect(env.VITE_SENTRY_ENVIRONMENT).toBeUndefined();
+    expect(env.VITE_SENTRY_TRACES_SAMPLE_RATE).toBe(0.1);
   });
 });

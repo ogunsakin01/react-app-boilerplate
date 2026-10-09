@@ -1,44 +1,55 @@
 ---
 name: add-seo
-description: Add SEO meta tags (title, description, canonical, Open Graph, Twitter card) to a page. Use when the user asks to add SEO, meta tags, social preview / link preview cards, page title, canonical URL, or noindex. Uses the boilerplate's Seo atom which leverages React 19's native <head> hoisting - no react-helmet needed.
+description: Add SEO meta tags (title, description, Open Graph image, canonical, Twitter card, noindex) to a page in this Vike SSR project. Use when the user asks to add SEO, meta tags, social preview / link preview cards, page title, canonical URL, or noindex. Tags are set with Vike's +title / +description / +image / +Head files and baked into the prerendered HTML - no react-helmet, no Seo component.
 ---
 
 # add-seo
 
-Every page renders `<Seo />` from `@/components/atoms/Seo` at the top of its JSX. React 19 hoists `<title>`, `<meta>`, and `<link>` elements into `<head>` automatically, so this works without `react-helmet-async` or any wrapper library.
+Every route is prerendered to static HTML at build time, so whatever you set here is in the HTML that crawlers and link-preview bots (Slack, X, Facebook, LinkedIn) fetch - no JavaScript needed.
 
-## Add SEO to a page
+Metadata lives next to the page in `pages/<slug>/`, never inside React components. Do not render `<title>` or `<meta>` from components, and do not install `react-helmet-async`.
+
+## Title and description
+
+```ts
+// pages/dashboard/+title.ts
+export const title = 'Dashboard · Acme';
+```
+
+```ts
+// pages/dashboard/+description.ts
+export const description = "Your team's dashboard - live metrics, alerts, and traces.";
+```
+
+`vike-react` turns these into `<title>`, `og:title`, `<meta name="description">` and `og:description`. A page without its own `+title.ts` falls back to the site-wide `title` in `pages/+config.ts`.
+
+## Social preview image
+
+```ts
+// pages/dashboard/+image.ts
+export const image = 'https://acme.example.com/og/dashboard.png';
+```
+
+Emits `og:image` and `<meta name="twitter:card" content="summary_large_image">`. Use an absolute URL - crawlers don't resolve relative ones.
+
+## Everything else: `+Head.tsx`
+
+For canonical URLs, `og:url`, `og:type`, a `twitter:card` on pages without `+image`, and `robots`, add a `+Head.tsx` to the page (see `pages/index/+Head.tsx`):
 
 ```tsx
-import { Seo } from '@/components/atoms/Seo';
-
-export function Dashboard() {
+// pages/dashboard/+Head.tsx
+export default function Head() {
   return (
-    <section>
-      <Seo
-        title="Dashboard"
-        siteName="Acme"
-        description="Your team's dashboard - live metrics, alerts, and traces."
-        canonical="https://acme.example.com/dashboard"
-      />
-      {/* rest of page */}
-    </section>
+    <>
+      <link rel="canonical" href="https://acme.example.com/dashboard" />
+      <meta property="og:url" content="https://acme.example.com/dashboard" />
+      <meta property="og:type" content="website" />
+    </>
   );
 }
 ```
 
-## Full prop set
-
-| prop          | required | notes                                                                        |
-| ------------- | -------- | ---------------------------------------------------------------------------- |
-| `title`       | yes      | Combined with `siteName` as `${title} · ${siteName}` if provided             |
-| `description` | no       | Emits `<meta name="description">` + `og:description` + `twitter:description` |
-| `canonical`   | no       | Emits `<link rel="canonical">` + `og:url`                                    |
-| `image`       | no       | Emits `og:image` + `twitter:image`; picks `summary_large_image` twitter card |
-| `siteName`    | no       | Emits `og:site_name` and suffixes the title                                  |
-| `type`        | no       | `website` (default) / `article` / `profile` - emits `og:type`                |
-| `robots`      | no       | e.g. `"noindex,nofollow"` for preview / staging pages                        |
-| `locale`      | no       | e.g. `"en_US"` - emits `og:locale`                                           |
+Site-wide head tags (favicon, theme colour) live in `pages/+Head.tsx`. Page `+Head` files add to it rather than replacing it.
 
 ## When to use `noindex`
 
@@ -47,22 +58,45 @@ export function Dashboard() {
 - Internal admin views
 
 ```tsx
-<Seo title="Internal preview" robots="noindex,nofollow" />
+// pages/internal/+Head.tsx
+export default function Head() {
+  return <meta name="robots" content="noindex,nofollow" />;
+}
 ```
+
+## Dynamic values
+
+Values must be known at build time - the HTML is generated once by `pnpm build`. For pages built from data (e.g. blog posts), export a function instead of a string; it receives `pageContext`:
+
+```ts
+// pages/blog/@slug/+title.ts
+import type { PageContext } from 'vike/types';
+
+export function title(pageContext: PageContext) {
+  const { post } = pageContext.data as { post: { title: string } };
+  return `${post.title} · Acme`;
+}
+```
+
+That needs a `+data.ts` and a `+onBeforePrerenderStart.ts` that lists every slug - see https://vike.dev/onBeforePrerenderStart.
 
 ## Verify
 
-Run the app (`pnpm dev`), open the page, and inspect `<head>` in devtools. You should see `<title>` and the meta tags for the values you passed. Unit-test via `document.head.querySelector(...)` - see `src/components/atoms/Seo/Seo.test.tsx`.
+```bash
+pnpm build
+```
+
+Open `dist/client/<slug>/index.html` (or `dist/client/index.html` for `/`) and check the `<head>`. That file is exactly what a crawler sees. `pnpm preview` serves the same output.
 
 ## robots.txt
 
-Ships as `public/robots.txt`. Vite copies `public/` into `dist/` at build time, so the file is served at `/robots.txt` in production automatically. Edit it for your deployment (e.g. disallow admin paths, add a full sitemap URL if your robots.txt lives on a separate domain).
+Ships as `public/robots.txt` and is copied to `dist/client/robots.txt`. Edit the rules for your deployment. Leave the `Sitemap: /sitemap.xml` line as is - the sitemap script rewrites it to an absolute URL from `VITE_SITE_URL` at build time (the robots.txt spec requires an absolute URL).
 
 ## Sitemap
 
-The sitemap is generated **from your routes** at build time by `scripts/generate-sitemap.mjs`, so it stays in sync with `src/routes/` without any manual step.
+Generated **from `pages/`** at build time by `scripts/generate-sitemap.mjs`:
 
-- Runs automatically as part of `pnpm build` (writes to `dist/sitemap.xml`).
-- Standalone: `pnpm generate:sitemap` (or `node scripts/generate-sitemap.mjs`).
-- Flags: `--base-url https://your.site` (or set `VITE_SITE_URL`), `--out path/to/file`, `--routes path/to/routes`.
-- Skips: `__root.tsx` layout and any dynamic route file (contains `$`). Extend the script if you need dynamic entries (e.g. blog posts from a CMS).
+- Runs automatically as part of `pnpm build` (writes `dist/client/sitemap.xml`).
+- Standalone: `pnpm generate:sitemap`.
+- Flags: `--base-url https://your.site` (or set `VITE_SITE_URL` in `.env.production` or the build environment), `--out <file>`, `--pages <dir>`.
+- Includes every directory with a `+Page.tsx`. Skips folders starting with `_` (`_error`). Route-parameter folders (`@slug`) are skipped - extend the script with the list of values if you need them.

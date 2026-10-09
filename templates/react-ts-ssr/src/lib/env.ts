@@ -13,7 +13,10 @@ export type Env = z.infer<typeof envSchema>;
 
 export function parseEnv(raw: unknown): Env {
   const source = typeof raw === 'object' && raw !== null ? raw : {};
-  const parsed = envSchema.safeParse(source);
+  // `KEY=""` (as copied from .env.example) means "not set": drop it so the
+  // schema's defaults apply instead of validating an empty string.
+  const defined = Object.fromEntries(Object.entries(source).filter(([, value]) => value !== ''));
+  const parsed = envSchema.safeParse(defined);
   if (!parsed.success) {
     const details = JSON.stringify(parsed.error.flatten(), null, 2);
     throw new Error(`Invalid environment variables:\n${details}`);

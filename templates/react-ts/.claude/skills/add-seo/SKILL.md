@@ -56,7 +56,7 @@ Run the app (`pnpm dev`), open the page, and inspect `<head>` in devtools. You s
 
 ## robots.txt
 
-Ships as `public/robots.txt`. Vite copies `public/` into `dist/` at build time, so the file is served at `/robots.txt` in production automatically. Edit it for your deployment (e.g. disallow admin paths, add a full sitemap URL if your robots.txt lives on a separate domain).
+Ships as `public/robots.txt`. Vite copies `public/` into `dist/` at build time, so the file is served at `/robots.txt` in production automatically. Edit the rules for your deployment (e.g. disallow admin paths). The `Sitemap:` line is rewritten to an absolute URL from `VITE_SITE_URL` at build time.
 
 ## Sitemap
 
@@ -64,5 +64,5 @@ The sitemap is generated **from your routes** at build time by `scripts/generate
 
 - Runs automatically as part of `pnpm build` (writes to `dist/sitemap.xml`).
 - Standalone: `pnpm generate:sitemap` (or `node scripts/generate-sitemap.mjs`).
-- Flags: `--base-url https://your.site` (or set `VITE_SITE_URL`), `--out path/to/file`, `--routes path/to/routes`.
-- Skips: `__root.tsx` layout and any dynamic route file (contains `$`). Extend the script if you need dynamic entries (e.g. blog posts from a CMS).
+- Flags: `--base-url https://your.site` (or set `VITE_SITE_URL` in `.env.production` or the build environment - it also makes the `robots.txt` `Sitemap:` line absolute), `--out path/to/file`, `--routes path/to/routes`.
+- Follows TanStack's file-routing rules: nested folders, `.` nesting, `index` / `route` files, `(group)` folders. Skips `__root.tsx`, `_pathless` layouts, `-ignored` files and dynamic routes (contain `$`). Extend the script if you need dynamic entries (e.g. blog posts from a CMS).

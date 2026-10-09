@@ -30,7 +30,10 @@
     "eslint-config",
     "react",
     "typescript",
-    "vite"
+    "vite",
+    "shareable-config",
+    "react-app-boilerplate",
+    "create-atomic-react"
   ],
   "dependencies": {
     "@eslint/js": "^9.17.0",

@@ -4,6 +4,8 @@ import a11yPreviewSource from '../../../../.storybook/preview.tsx?raw';
 import a11yE2eSource from '../../../../e2e/a11y.spec.ts?raw';
 import generateScriptSource from '../../../../scripts/generate.mjs?raw';
 import { CodeBlock } from '@/components/atoms/CodeBlock';
+import { Seo } from '@/components/atoms/Seo';
+import { env } from '@/lib/env';
 import { ArchitectureNote } from '@/components/molecules/example/ArchitectureNote';
 import videoFormSource from '@/components/molecules/example/VideoUrlForm/VideoUrlForm.tsx?raw';
 import videoFormTestSource from '@/components/molecules/example/VideoUrlForm/VideoUrlForm.test.tsx?raw';
@@ -416,6 +418,11 @@ const EXTRA_NAV: { id: string; title: string }[] = [
 export function Docs() {
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
+      <Seo
+        title="Docs"
+        siteName={env.VITE_APP_TITLE}
+        description="Every feature this boilerplate ships (routing, data fetching, forms, mocks, theming, testing) explained with code from the running app."
+      />
       <aside className="lg:sticky lg:top-20 lg:h-fit lg:w-56 lg:shrink-0">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
           On this page
