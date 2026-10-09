@@ -5,7 +5,6 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-# The sitemap is generated at build time by scripts/generate-sitemap.mjs.
-# Replace the host with your absolute production URL if you serve robots.txt from an
-# alternate domain (e.g. https://example.com/robots.txt).
+# The sitemap is generated at build time by scripts/generate-sitemap.mjs, which
+# also rewrites this line to an absolute URL using VITE_SITE_URL.
 Sitemap: /sitemap.xml

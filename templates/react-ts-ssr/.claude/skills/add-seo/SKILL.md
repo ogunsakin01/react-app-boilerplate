@@ -90,7 +90,7 @@ Open `dist/client/<slug>/index.html` (or `dist/client/index.html` for `/`) and c
 
 ## robots.txt
 
-Ships as `public/robots.txt` and is copied to `dist/client/robots.txt`. Edit it for your deployment, and replace the relative `Sitemap:` line with your absolute sitemap URL (the robots.txt spec requires an absolute URL).
+Ships as `public/robots.txt` and is copied to `dist/client/robots.txt`. Edit the rules for your deployment. Leave the `Sitemap: /sitemap.xml` line as is - the sitemap script rewrites it to an absolute URL from `VITE_SITE_URL` at build time (the robots.txt spec requires an absolute URL).
 
 ## Sitemap
 
@@ -98,5 +98,5 @@ Generated **from `pages/`** at build time by `scripts/generate-sitemap.mjs`:
 
 - Runs automatically as part of `pnpm build` (writes `dist/client/sitemap.xml`).
 - Standalone: `pnpm generate:sitemap`.
-- Flags: `--base-url https://your.site` (or set `VITE_SITE_URL` in the shell - the script does not read `.env`), `--out <file>`, `--pages <dir>`.
-- Includes every directory with a `+Page.tsx`. Skips folders starting with `_` (`_error`). Route-parameter folders (`@slug`) are not handled yet - exclude them or extend the script.
+- Flags: `--base-url https://your.site` (or set `VITE_SITE_URL` in `.env.production` or the build environment), `--out <file>`, `--pages <dir>`.
+- Includes every directory with a `+Page.tsx`. Skips folders starting with `_` (`_error`). Route-parameter folders (`@slug`) are skipped - extend the script with the list of values if you need them.
