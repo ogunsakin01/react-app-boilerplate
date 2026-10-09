@@ -12,7 +12,8 @@ export default defineConfig(({ mode }) => {
   return {
     base: env.VITE_BASE_URL || '/',
     server: { port: 5173, strictPort: false },
-    preview: { port: 4173 },
+    // strictPort: e2e/playwright.config.ts waits on exactly this port.
+    preview: { port: 4173, strictPort: true },
     plugins: [vike(), react(), tailwindcss()],
     resolve: {
       alias: {

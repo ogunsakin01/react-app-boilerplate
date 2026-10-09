@@ -84,6 +84,7 @@ function seed(root: string) {
   mkdirSync(join(root, 'e2e'), { recursive: true });
   writeFileSync(join(root, 'e2e', 'app.spec.ts'), '// example e2e specs');
   writeFileSync(join(root, 'e2e', 'a11y.spec.ts'), "const routes = ['/', '/docs', '/example'];");
+  writeFileSync(join(root, 'e2e', 'prerender.spec.ts'), "for (const path of ['/', '/docs']) {}");
   writeFileSync(
     join(root, 'src', 'components', 'templates', 'MainLayout', 'MainLayout.test.tsx'),
     "expect(screen.getByRole('link', { name: /docs/i }))",
@@ -174,6 +175,14 @@ describe('scripts/strip-example.mjs', () => {
     expect(spec).toContain("path: '/'");
     expect(spec).not.toContain('/docs');
     expect(spec).not.toContain('/example');
+  });
+
+  it('trims the prerender spec to / and drops the /watch deep-link check', () => {
+    run(tmp);
+    const spec = readFileSync(join(tmp, 'e2e', 'prerender.spec.ts'), 'utf8');
+    expect(spec).toContain("for (const path of ['/'])");
+    expect(spec).not.toContain('/docs');
+    expect(spec).not.toContain('/watch');
   });
 
   it('rewrites the MainLayout test to match the simplified nav', () => {

@@ -60,7 +60,10 @@ describe('adaptToPackageManager', () => {
     await writeFile(join(dir, '.husky/pre-commit'), 'pnpm exec lint-staged\n');
     await writeFile(join(dir, '.husky/commit-msg'), 'pnpm exec commitlint --edit "$1"\n');
     await writeFile(join(dir, '.github/workflows/ci.yml'), WORKFLOW);
-    await writeFile(join(dir, 'e2e/playwright.config.ts'), "webServerCommand: 'pnpm dev:app',\n");
+    await writeFile(
+      join(dir, 'e2e/playwright.config.ts'),
+      "webServerCommand: 'pnpm dev:app',\n  command: 'pnpm build && pnpm preview',\n",
+    );
     await writeFile(join(dir, 'netlify.toml'), '[build]\n  command = "pnpm build"\n');
   });
 
@@ -85,6 +88,9 @@ describe('adaptToPackageManager', () => {
     );
     expect(await readFile(join(dir, 'e2e/playwright.config.ts'), 'utf8')).toContain(
       "webServerCommand: 'npm run dev:app'",
+    );
+    expect(await readFile(join(dir, 'e2e/playwright.config.ts'), 'utf8')).toContain(
+      "command: 'npm run build && npm run preview'",
     );
     expect(await readFile(join(dir, 'netlify.toml'), 'utf8')).toContain(
       'command = "npm run build"',

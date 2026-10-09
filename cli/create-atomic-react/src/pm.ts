@@ -84,8 +84,8 @@ export async function adaptToPackageManager(targetDir: string, pm: PackageManage
   await rewriteFile(targetDir, '.github/workflows/e2e.yml', (y) => rewriteWorkflow(y, pm));
   await rewriteFile(targetDir, 'e2e/playwright.config.ts', (ts) =>
     ts.replace(
-      /webServerCommand: '([^']+)'/,
-      (_, cmd: string) => `webServerCommand: '${command(cmd)}'`,
+      /\b(webServerCommand|command): '([^']+)'/g,
+      (_, key: string, cmd: string) => `${key}: '${command(cmd)}'`,
     ),
   );
   await rewriteFile(targetDir, 'netlify.toml', (toml) =>

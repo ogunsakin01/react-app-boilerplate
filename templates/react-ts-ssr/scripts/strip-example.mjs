@@ -32,7 +32,8 @@ Removes the boilerplate's example tour so you can start on your own app:
   - Cleans src/components/{atoms,molecules,organisms,templates}/index.ts barrels
   - Empties src/mocks/handlers.ts
   - Removes VITE_OEMBED_BASE_URL from the env schema, its test and .env.example
-  - Replaces e2e/app.spec.ts with e2e/smoke.spec.ts and trims e2e/a11y.spec.ts to /
+  - Replaces e2e/app.spec.ts with e2e/smoke.spec.ts and trims e2e/a11y.spec.ts and
+    e2e/prerender.spec.ts to /
   - Simplifies MainLayout nav to just the theme toggle, and rewrites its test
 
 Options:
@@ -207,6 +208,15 @@ export function collectActions(root) {
       kind: 'rewrite',
       path: 'src/components/templates/MainLayout/MainLayout.test.tsx',
       apply: () => writeFileSync(mainLayoutTest, MAIN_LAYOUT_TEST_TSX),
+    });
+  }
+
+  const prerenderSpec = join(root, 'e2e', 'prerender.spec.ts');
+  if (existsSync(prerenderSpec) && differs(prerenderSpec, PRERENDER_SPEC_TS)) {
+    actions.push({
+      kind: 'rewrite',
+      path: 'e2e/prerender.spec.ts',
+      apply: () => writeFileSync(prerenderSpec, PRERENDER_SPEC_TS),
     });
   }
 
@@ -424,6 +434,27 @@ for (const { name, path } of routes) {
     expect(results.violations).toEqual([]);
   });
 }
+`;
+
+const PRERENDER_SPEC_TS = `import { expect, test } from '@playwright/test';
+import { PREVIEW_URL } from './playwright.config';
+
+// What a crawler or link-preview bot gets: the prerendered HTML, no JavaScript.
+// Add each new page here.
+for (const path of ['/']) {
+  test(\`\${path} ships its title and description in the static HTML\`, async ({ request }) => {
+    const res = await request.get(\`\${PREVIEW_URL}\${path}\`);
+    expect(res.status()).toBe(200);
+    const html = await res.text();
+    expect(html).toMatch(/<title>[^<]+<\\/title>/);
+    expect(html).toMatch(/<meta name="description" content="[^"]+"/);
+  });
+}
+
+test('unknown paths get the prerendered 404 page', async ({ request }) => {
+  const res = await request.get(\`\${PREVIEW_URL}/definitely-not-a-page\`);
+  expect(await res.text()).toContain('Not found');
+});
 `;
 
 const SMOKE_SPEC_TS = `import { expect, test } from '@playwright/test';
