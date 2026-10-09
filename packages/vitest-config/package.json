@@ -1,6 +1,6 @@
 {
   "name": "@react-app-boilerplate/vitest-config",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared Vitest configuration factory for React apps: jsdom, cleanup, MSW-friendly, v8 coverage with sensible excludes.",
   "license": "MIT",
   "author": "Damilola Ogunsakin",

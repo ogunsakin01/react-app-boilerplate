@@ -1,6 +1,6 @@
 {
   "name": "@react-app-boilerplate/playwright-config",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared Playwright configuration factory: CI-aware retries/workers, HTML report, webServer auto-starting Vite.",
   "license": "MIT",
   "author": "Damilola Ogunsakin",

@@ -1,6 +1,6 @@
 {
   "name": "@react-app-boilerplate/eslint-config",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared ESLint flat configurations: base (TS + Prettier) and Vite/React (adds react-hooks, react-refresh, browser/Node globals).",
   "license": "MIT",
   "author": "Damilola Ogunsakin",

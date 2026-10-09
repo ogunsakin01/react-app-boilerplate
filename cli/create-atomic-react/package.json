@@ -1,6 +1,6 @@
 {
   "name": "create-atomic-react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Create a React 19 + TypeScript + Vite app in one command: SPA (TanStack Router, PWA) or prerendered SSR (Vike) for SEO. Tailwind v4, TanStack Query, MSW, Storybook, Vitest, Playwright, axe accessibility tests, atomic design, AGENTS.md for AI coding agents.",
   "license": "MIT",
   "author": "Damilola Ogunsakin",
