@@ -2,11 +2,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
+import { queryClient } from '@/lib/query-client';
 import { QueryProvider } from './QueryProvider';
 
 function QueryClientProbe() {
   const client = useQueryClient();
-  return <span data-testid="probe">{client ? 'ok' : 'missing'}</span>;
+  return <span data-testid="probe">{client === queryClient ? 'shared' : 'other'}</span>;
 }
 
 describe('QueryProvider', () => {
@@ -25,7 +26,7 @@ describe('QueryProvider', () => {
         <QueryClientProbe />
       </QueryProvider>,
     );
-    expect(screen.getByTestId('probe')).toHaveTextContent('ok');
+    expect(screen.getByTestId('probe')).toHaveTextContent('shared');
   });
 
   it('has no accessibility violations wrapping a landmark child', async () => {

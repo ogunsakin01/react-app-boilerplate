@@ -7,6 +7,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Sets data-theme before first paint. Must match THEME_BOOT_SCRIPT in
+         src/providers/theme-context.ts (ThemeProvider.test.tsx checks). -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t !== 'light' && t !== 'dark')
+            t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
     <title>react-app-boilerplate</title>
     <!--
       Defaults for link-preview bots, which don't run JavaScript and never see the
