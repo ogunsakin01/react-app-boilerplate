@@ -25,3 +25,15 @@
   from = "/*"
   to = "/404.html"
   status = 404
+
+# Baseline security headers for every path. There's no Content-Security-Policy
+# by default: a useful one must list your API, Sentry and embed origins (the
+# demo embeds youtube-nocookie.com) and allow the inline theme boot script -
+# add one per deployment and test it with Content-Security-Policy-Report-Only.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"

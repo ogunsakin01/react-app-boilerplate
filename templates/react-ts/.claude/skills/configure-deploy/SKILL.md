@@ -65,15 +65,19 @@ pnpm deploy
 
 The script invalidates `/*`, which CloudFront bills as a single path. Hashed assets are unaffected in practice: their names change every build, so the new HTML never asks for a cached old copy.
 
-## Serve from a CDN prefix
+## Serve from a CDN or a sub-path
 
-If you serve assets from a CDN with a subpath (e.g. `https://cdn.example.com/app/`), set `VITE_BASE_URL` at build time:
+Set `VITE_BASE_URL` at build time:
 
 ```bash
+# CDN origin: JS/CSS load from the CDN; index.html, sw.js and the manifest stay on your domain
 VITE_BASE_URL=https://cdn.example.com/app/ pnpm build
+
+# Sub-path (e.g. GitHub Pages): the whole app, manifest scope and offline fallback move under it
+VITE_BASE_URL=/repo-name/ pnpm build
 ```
 
-Vite bakes that URL into every hashed asset reference. Deploy the resulting `dist/` to the corresponding path.
+With a CDN origin the app itself stays on `/`, because a service worker must be served from the page's own origin. Only the hashed JS/CSS URLs in the built HTML point at the CDN. Upload `dist/assets/` to the CDN path and deploy `dist/` to your host as usual.
 
 ## Dry run
 

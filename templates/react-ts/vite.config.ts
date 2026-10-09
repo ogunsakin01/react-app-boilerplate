@@ -12,8 +12,22 @@ export default defineConfig(({ mode }) => {
   const appTitle = env.VITE_APP_TITLE || 'react-app-boilerplate';
   const shortName = env.VITE_APP_SHORT_NAME || appTitle;
 
+  // VITE_BASE_URL is either a sub-path ("/app/", e.g. GitHub Pages) or a CDN
+  // origin ("https://cdn.example.com/app/"). A service worker must be served
+  // from the page's own origin, so for a CDN the app stays on "/" and only the
+  // built JS/CSS URLs point at the CDN.
+  const baseUrl = env.VITE_BASE_URL || '/';
+  const cdn = /^https?:\/\//.test(baseUrl) ? baseUrl.replace(/\/?$/, '/') : null;
+  const base = cdn ? '/' : baseUrl;
+
   return {
-    base: env.VITE_BASE_URL || '/',
+    base,
+    experimental: cdn
+      ? {
+          renderBuiltUrl: (filename: string) =>
+            /\.(js|css)$/.test(filename) ? `${cdn}${filename}` : { relative: true },
+        }
+      : undefined,
     plugins: [
       TanStackRouterVite({ target: 'react', autoCodeSplitting: true }),
       react(),
@@ -28,17 +42,17 @@ export default defineConfig(({ mode }) => {
           theme_color: '#0f172a',
           background_color: '#ffffff',
           display: 'standalone',
-          start_url: '/',
-          scope: '/',
+          start_url: base,
+          scope: base,
           icons: [
             {
-              src: '/favicon.svg',
+              src: `${base}favicon.svg`,
               sizes: 'any',
               type: 'image/svg+xml',
               purpose: 'any',
             },
             {
-              src: '/favicon.svg',
+              src: `${base}favicon.svg`,
               sizes: 'any',
               type: 'image/svg+xml',
               purpose: 'maskable',
@@ -47,7 +61,9 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-          navigateFallback: '/index.html',
+          // MSW's worker is only started in dev; don't ship it in the precache.
+          globIgnores: ['**/mockServiceWorker.js'],
+          navigateFallback: `${base}index.html`,
           navigateFallbackDenylist: [/^\/api\//],
         },
         devOptions: {
