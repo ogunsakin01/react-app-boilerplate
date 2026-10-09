@@ -1,1 +1,3 @@
-export const title = 'Welcome · react-app-boilerplate';
+import { env } from '@/lib/env';
+
+export const title = `Welcome · ${env.VITE_APP_TITLE}`;

@@ -1,1 +1,3 @@
-export const title = 'Not found · react-app-boilerplate';
+import { env } from '@/lib/env';
+
+export const title = `Not found · ${env.VITE_APP_TITLE}`;

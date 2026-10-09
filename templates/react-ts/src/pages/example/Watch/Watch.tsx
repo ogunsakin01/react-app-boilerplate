@@ -4,6 +4,8 @@ import { Suspense } from 'react';
 import { ArchitectureNote } from '@/components/molecules/example/ArchitectureNote';
 import { VideoUrlForm } from '@/components/molecules/example/VideoUrlForm';
 import { VideoPlayer } from '@/components/organisms/example/VideoPlayer';
+import { Seo } from '@/components/atoms/Seo';
+import { env } from '@/lib/env';
 
 export type WatchProps = {
   videoId: string | null;
@@ -14,6 +16,11 @@ export function Watch({ videoId }: WatchProps) {
 
   return (
     <section className="flex flex-col gap-6">
+      <Seo
+        title="Watch"
+        siteName={env.VITE_APP_TITLE}
+        description="YouTube video player with oEmbed metadata via TanStack Query."
+      />
       <h1 className="sr-only">Watch a YouTube video</h1>
       <VideoUrlForm onSubmit={(id) => navigate({ to: '/watch', search: { v: id } })} />
       {videoId ? (

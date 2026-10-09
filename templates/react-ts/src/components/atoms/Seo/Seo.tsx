@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 export type SeoProps = {
   title: string;
   description?: string;
@@ -19,6 +21,13 @@ export function Seo({
   robots,
   locale,
 }: SeoProps) {
+  // index.html ships default description / Open Graph tags (data-seo-default)
+  // for crawlers that don't run JavaScript. Once a page renders its own tags,
+  // drop the defaults so the document doesn't carry two of each.
+  useEffect(() => {
+    for (const el of document.head.querySelectorAll('[data-seo-default]')) el.remove();
+  }, []);
+
   const fullTitle = siteName ? `${title} · ${siteName}` : title;
   const twitterCard = image ? 'summary_large_image' : 'summary';
 

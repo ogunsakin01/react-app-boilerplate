@@ -1,5 +1,6 @@
 // EXAMPLE landing page - safe to delete once you build your own.
 import { Seo } from '@/components/atoms/Seo';
+import { env } from '@/lib/env';
 import { ArchitectureNote } from '@/components/molecules/example/ArchitectureNote';
 import { CtaCard } from '@/components/molecules/example/CtaCard';
 
@@ -39,7 +40,7 @@ export function Landing() {
     <section className="flex flex-col gap-6">
       <Seo
         title="Welcome"
-        siteName="react-app-boilerplate"
+        siteName={env.VITE_APP_TITLE}
         description="Opinionated React + TypeScript + Vite boilerplate with accessibility testing, atomic-design components, TanStack Router, and MSW mocks."
       />
       <div className="flex flex-col gap-2">

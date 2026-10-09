@@ -2,12 +2,19 @@
 import { useNavigate } from '@tanstack/react-router';
 import { ArchitectureNote } from '@/components/molecules/example/ArchitectureNote';
 import { VideoUrlForm } from '@/components/molecules/example/VideoUrlForm';
+import { Seo } from '@/components/atoms/Seo';
+import { env } from '@/lib/env';
 
 export function Example() {
   const navigate = useNavigate();
 
   return (
     <section className="flex flex-col gap-6">
+      <Seo
+        title="Example"
+        siteName={env.VITE_APP_TITLE}
+        description="Paste a YouTube URL to see the boilerplate wire react-hook-form + zod + TanStack Query end to end."
+      />
       <div className="flex flex-col gap-2">
         <p className="text-xs font-medium uppercase tracking-wide text-primary">Example usage</p>
         <h1 className="text-3xl font-semibold tracking-tight">Paste a YouTube URL</h1>
